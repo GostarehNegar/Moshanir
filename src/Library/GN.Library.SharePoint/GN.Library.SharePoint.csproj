@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net461</TargetFramework>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.SharePointOnline.CSOM" Version="16.1.23109.12000" />
+		<PackageReference Include="SharepointCommon" Version="3.1.1" />
+		<PackageReference Include="System.Linq.Async.Queryable" Version="6.0.1" />
+		<PackageReference Include="System.Xml.XDocument" Version="4.3.0" />
+		<PackageReference Include="System.Xml.XmlDocument" Version="4.3.0" />
+
+	</ItemGroup>
+	<ItemGroup>
+		<Folder Include="SP2010\WebReferences\" />
+	</ItemGroup>
+
+
+	<ItemGroup>
+		<ProjectReference Include="..\GN.Library\GN.Library.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Reference Include="System.Web.Services" />
+	</ItemGroup>
+
+</Project>

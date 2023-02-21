@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net461</TargetFramework>
+  </PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="2.2.0" />
+		<PackageReference Include="Swashbuckle.AspNetCore" Version="5.0.0" />
+		<PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="5.0.0" />
+		<PackageReference Include="Microsoft.SharePointOnline.CSOM" Version="16.1.23109.12000" />
+
+	</ItemGroup>
+  <ItemGroup>
+    <Compile Remove="Startup.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Startup.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Library\GN.Library.Win32\GN.Library.Win32.csproj" />
+    <ProjectReference Include="..\Library\GN.Library\GN.Library.csproj" />
+    <ProjectReference Include="..\Mapna.Transmittals.Exchange\Mapna.Transmittals.Exchange.csproj" />
+  </ItemGroup>
+
+</Project>

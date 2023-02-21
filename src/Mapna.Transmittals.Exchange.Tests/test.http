@@ -1,0 +1,154 @@
+
+@baseUrl = http://172.16.6.78:2350/Transmittals
+##
+GET http://172.16.6.78:2350/Transmittals/ping
+
+###
+# Sample request
+POST {{baseUrl}}/
+Content-Type: application/json
+
+{
+    "Url": "https://raw.githubusercontent.com/GostarehNegar/Moshanir/main/File1.pdf",
+    "ReferedTo": null,
+    "TR_NO": "MAPNA-TRANS-31",
+    "Title":"Sample Title",
+    "Documents": [
+        {
+            "DocNumber": "MD2-AS-00-BP-I-10-PI0-101",
+            "FileName": "MD2-AS-00-BP-I-10-PI0-101_A_A.pdf",
+            "Url": "https://raw.githubusercontent.com/GostarehNegar/Moshanir/main/File2.pdf",
+            "Ext_Rev": "A",
+            "Int_Rev": "A",
+            "Status": "STAT",
+            "Purpose": "PURP",
+        },
+        {
+            "DocNumber":  "MD2-AS-00-BP-I-11-IO3-101",
+            "FileName": "MD2-AS-00-BP-I-11-IO3-101_B_B.pdf",
+            "Url": "https://raw.githubusercontent.com/GostarehNegar/Moshanir/main/File3.pdf",
+            "Ext_Rev": "A",
+            "Int_Rev": "A",
+            "Status": "STAT",
+            "Purpose": "PURP",
+        },{
+            "DocNumber":"MD2-AS-00-BL-C-01-AT0-606",
+            "FileName": "MD2-AS-00-BL-C-01-AT0-606_A_B.zip",
+            "Url": "https://raw.githubusercontent.com/GostarehNegar/Moshanir/main/1.zip",
+            "Ext_Rev": "A",
+            "Int_Rev": "B",
+            "Status": "STAT",
+            "Purpose": "PURP",
+
+        },
+        {
+            "DocNumber":"MD2-AS-00-GN-E-16-TXI-317",
+            "FileName": "MD2-AS-00-GN-E-16-TXI-317_A_B.pdf",
+            "Url": "https://raw.githubusercontent.com/GostarehNegar/Moshanir/main/File4.pdf",
+            "Ext_Rev": "A",
+            "Int_Rev": "B",
+            "Status": "STAT",
+            "Purpose": "PURP",
+
+        }
+
+    ]
+}
+
+###
+# When files are empty shoulf return error.
+
+POST {{baseUrl}}/
+Content-Type: application/json
+
+{
+    "Url": "https://gnco.irrr",
+    "ReferedTo": null,
+    "TR_NO": "MAPNA-TRANS-02",
+    "Documents": [
+       
+    ]
+}
+###
+# Should fail if doc is not in mater plan
+POST {{baseUrl}}/
+Content-Type: application/json
+
+{
+    "Url": "https://gnco.irrr",
+    "ReferedTo": null,
+    "TR_NO": "MAPNA-TRANS-02",
+    "Documents": [
+        {
+            "DocNumber": "BASIC PLAN1",
+            "Url": "http://www.gnco.ir",
+            "Ext_Rev": "A",
+            "Source_Id": "bfd63740-23f2-4b98-a603-a8af1ef4efa5",
+            "Int_Rev": "A",
+            "Status": "STAT",
+            "Purpose": "PURP",
+            "FileName": "BASIC PLAN _0_1.pdf"
+        }
+    ]
+}
+###
+# Sample request many files
+POST {{baseUrl}}/
+Content-Type: application/json
+
+{
+    "Url": "https://raw.githubusercontent.com/GostarehNegar/Moshanir/main/File1.pdf",
+    "ReferedTo": null,
+    "TR_NO": "MAPNA-TRANS-07",
+    "Documents": [
+        {
+            "DocNumber": "BASIC PLAN",
+            "Url": "http://www.gnco.ir",
+            "Ext_Rev": "A",
+            "Int_Rev": "A",
+            "Status": "STAT",
+            "Purpose": "PURP",
+            "FileName": "BASIC PLAN _0_1.pdf"
+        },
+        {
+            "DocNumber": "DETAIL PLAN",
+            "Url": "https://raw.githubusercontent.com/GostarehNegar/Moshanir/main/1.zip",
+            "Ext_Rev": "A",
+            "Int_Rev": "A",
+            "Status": "STAT",
+            "Purpose": "PURP",
+            "FileName": "DETAIL PLAN _0_1.pdf"
+        },
+        {
+            "DocNumber": "PLAN A",
+            "Url": "https://raw.githubusercontent.com/GostarehNegar/Moshanir/main/File1.pdf",
+            "Ext_Rev": "A",
+            "Int_Rev": "A",
+            "Status": "STAT",
+            "Purpose": "PURP",
+            "FileName": "PLAN A _0_1.pdf"
+        },
+        {
+            "DocNumber": "PLAN B",
+            "Url": "https://raw.githubusercontent.com/GostarehNegar/Moshanir/main/File2.pdf",
+            "Ext_Rev": "A",
+            "Int_Rev": "A",
+            "Status": "STAT",
+            "Purpose": "PURP",
+            "FileName": "PLAN B _0_1.pdf"
+        },
+        {
+            "DocNumber": "PLAN C",
+            "Url": "https://raw.githubusercontent.com/GostarehNegar/Moshanir/main/File3.pdf",
+            "Ext_Rev": "A",
+            "Source_Id": "3a78de9f-ca34-4bbc-985a-1e786a390483",
+            "Int_Rev": "A",
+            "Status": "STAT",
+            "Purpose": "PURP",
+            "FileName": "PLAN C _0_1.pdf"
+        }
+
+    ]
+}
+
+###

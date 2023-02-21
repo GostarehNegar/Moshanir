@@ -1,0 +1,19 @@
+{
+  "TR_NO": "sample", // Mapna Trans Number
+  "Url": "http//kkk", // Url of transmittal letter
+  "ReferedTo": "", // Moshanir Trans Number
+  "Source_Id": "", // Transmittal Mapna SourceId
+  "Documents": [
+    {
+      "DocNumber": "sample", // Should be in masterlist.
+      "Url": "http://mapna/sample.pdf",
+      "Ext_Rev": "", // Version of document as of Moshanir
+      "Source_Id": "",
+      "Int_Rev": "", // Mapna revision number.
+      "Status": "",
+      "Purpose": "",
+      "FileName": "sample_1_0.pdf" // Filename including extension.
+    }
+  ]
+
+}

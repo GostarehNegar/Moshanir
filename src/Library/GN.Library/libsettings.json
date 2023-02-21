@@ -1,0 +1,9 @@
+﻿{
+	"ConnectionStrings": {
+		// hhh
+		"Xrm": "Url=http://gndcrm2016b/gndev; Domain=gnco; Username=babak; Password=;"
+	},
+	"MySettings": {
+		"Value": "MyValue"
+	}
+}

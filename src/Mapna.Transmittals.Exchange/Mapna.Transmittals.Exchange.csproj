@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>netstandard2.0</TargetFramework>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.AspNetCore" Version="2.2.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.2.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.2.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Mvc.Abstractions" Version="2.2.0" />
+		<PackageReference Include="Microsoft.SharePointOnline.CSOM" Version="16.1.23109.12000" />
+		<PackageReference Include="System.Linq.Async.Queryable" Version="6.0.1" />
+		<PackageReference Include="System.Reactive.Linq" Version="5.0.0" />
+
+	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="Domain\Outgoing\" />
+	</ItemGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\Library\GN.Library.SharePoint\GN.Library.SharePoint.csproj" />
+	  <ProjectReference Include="..\Library\GN.Library\GN.Library.csproj" />
+	</ItemGroup>
+
+
+</Project>

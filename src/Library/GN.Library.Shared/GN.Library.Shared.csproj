@@ -1,0 +1,45 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup Label="Globals">
+    <SccProjectName>SAK</SccProjectName>
+    <SccProvider>SAK</SccProvider>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccLocalPath>SAK</SccLocalPath>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Library\Commands\**" />
+    <Compile Remove="Library\v1\**" />
+    <EmbeddedResource Remove="Library\Commands\**" />
+    <EmbeddedResource Remove="Library\v1\**" />
+    <None Remove="Library\Commands\**" />
+    <None Remove="Library\v1\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="Chats\ChatEntity.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Chats\ChatEntity.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="3.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="3.1.27" />
+    <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Library\Messages\" />
+    <Folder Include="Library\Xrm\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System.Web.Services">
+      <HintPath>C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.6.1\System.Web.Services.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,42 @@
+# host: 0.0.0.0
+port: 4222
+server_name: dynamic_nats_server5
+# jetstream 
+# {
+  # store_dir: 'data'
+
+# }
+cluster {
+  name: dynamic_nats_cluster
+
+  # host/port for inbound route connections from other server
+  # listen: 172.16.6.56:5222
+  port:5222
+
+
+  # This server establishes routes with these server.
+  # This server solicits new routes and Routes are actively solicited and connected to from this server.
+  # Other servers can connect to us if they supply the correct credentials
+  # in their routes definitions from above.
+  routes = [
+    nats-route://gndbabak:5222
+  
+  ]}
+  
+# authorization {
+    # token: "s3cr3t"
+  # }
+  
+# accounts {
+    # A: {
+         # users: [
+            # {user: a, password: a}
+         # ]
+    # },
+    # B: {
+        # users: [
+            # {user: b, password: b}
+        # ]
+    # }
+# }
+  
