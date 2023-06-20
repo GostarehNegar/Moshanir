@@ -15,6 +15,7 @@ using System.Linq;
 using Mapna.Transmittals.Exchange.Services.Queues.Incomming.Steps;
 using Mapna.Transmittals.Exchange.Services.Queues;
 using Mapna.Transmittals.Exchange.Internals;
+using System.Net.Http;
 
 namespace Mapna.Transmittals.Exchange.Services.Queues.Incomming
 {
@@ -108,20 +109,25 @@ namespace Mapna.Transmittals.Exchange.Services.Queues.Incomming
             {
                 if (context.IsRetryable(task.Exception.GetBaseException()))
                 {
-                    Task.Delay(context.IncrementTrials(), context.CancellationToken)
-                        .ContinueWith(x =>
-                        {
-                            if (!x.IsCanceled)
-                            {
-                                this.Enqueue(context);
-                            }
-                        });
+                    //this.logger.LogInformation(
+                    //    $"Failed to process job on Transmital{context.Transmittal} with {context.Trial} trials. We will retry in few seconds.");
+                    context.IncrementTrials();
+                    this.Enqueue(context);
+                    //Task.Delay(context.IncrementTrials(), context.CancellationToken)
+                    //    .ContinueWith(x =>
+                    //    {
+                    //        if (!x.IsCanceled)
+                    //        {
+                    //            this.Enqueue(context);
+                    //        }
+                    //    });
                 }
                 else
                 {
                     //context.SendLog(LogLevel.Error, "My Error");
                     context.SendLog(LogLevel.Error,
-                        $"An unrecoverable error occured while trying to process Job:{context.Job} On Transmitall: {context.Transmittal}" +
+                        $"FAILURE. Transmittal {context.Transmittal}" +
+                        $"An unrecoverable error occured while trying to process this job:'{context.Job}'" +
                         $"\r\n Error:'{task.Exception.GetBaseException()?.Message}'");
                     context.CompletionSource.SetException(task.Exception);
                     _ = CancelDownloads(context);
@@ -146,10 +152,52 @@ namespace Mapna.Transmittals.Exchange.Services.Queues.Incomming
             }
 
         }
+        public class FeedBackResponse
+        {
+            public string responseCode { get; set; }
+            public string responseDesc { get; set; }
+
+            public int GetCode() => int.TryParse(responseCode, out var res) ? res : -1;
+
+        }
+        private async Task SendResultFeedBack(string TR_NO, string status_code, string message)
+        {
+            var client = new HttpClient();
+            client.DefaultRequestHeaders.Add("TR_NO", TR_NO);
+            client.DefaultRequestHeaders.Add("RESPONSE_CODE", status_code);
+            client.DefaultRequestHeaders.Add("RESPONSE_DESC", message);
+            client.DefaultRequestHeaders.Add("username", "moshanir");
+            client.DefaultRequestHeaders.Add("password", "M1234567");
+
+            var url = "https://mycart.mapnagroup.com/group_app/ws_dc/npx/getresult";
+            try
+            {
+                var response = await client.PostAsync(url, new StringContent("Feedback"));
+                response.EnsureSuccessStatusCode();
+                var str = await response.Content.ReadAsStringAsync();
+                var r = Newtonsoft.Json.JsonConvert.DeserializeObject<FeedBackResponse>(str);
+                if (r.GetCode() != 0)
+                {
+                    throw new Exception($"Code:'{r.responseCode}'. Message :{r.responseDesc}");
+
+                }
+
+                this.logger.LogInformation(
+                    $"Feedback Successfully Sent to '{url}'. TR_NO: '{TR_NO}', RESPONSE_CODE: '{status_code}', RESPONSE_DESC: '{message}'  ");
+
+            }
+            catch (Exception err)
+            {
+                this.logger.LogError(
+                    $"An error occured while trying to send feedback on transmittal receive to url:{url}. Error:{err.GetBaseException().Message} ");
+            }
+        }
         private async Task<IncommingTransmitalContext> SetStatus(IncommingTransmitalContext context)
         {
             var task = context.CompletionTask;
             if (context.Job == null)
+                return context;
+            if (!task.IsCompleted)
                 return context;
             if (task.IsCanceled)
             {
@@ -158,10 +206,13 @@ namespace Mapna.Transmittals.Exchange.Services.Queues.Incomming
             else if (task.IsFaulted)
             {
                 await context.GetRepository().SetJobStatus(context.Job.InternalId, "Failed");
+                await SendResultFeedBack(context.Transmittal.TR_NO, "-1", task.Exception.GetBaseException().Message);
             }
             else
             {
                 await context.GetRepository().SetJobStatus(context.Job.InternalId, "Completed");
+                await SendResultFeedBack(context.Transmittal.TR_NO, "0", "Success");
+
             }
             return context;
         }
@@ -182,11 +233,13 @@ namespace Mapna.Transmittals.Exchange.Services.Queues.Incomming
                         .WithAction(x => x.Get(constructor: sp => this.downloader))
                         .WithServiceProvide(this.serviceProvider)
                         .SetCannellationToken(token))
+                    .Then(IncommingQueueSteps.CheckTrials)
                     .Then(IncommingQueueSteps.Validate)
                     .Then(IncommingQueueSteps.EnsureJob)
                     .Then(IncommingQueueSteps.GetOrAddTransmittal)
                     .Then(IncommingQueueSteps.DownloadLetter)
                     .Then(IncommingQueueSteps.DownloadFiles)
+                    .Then(IncommingQueueSteps.UpdateTransmittalIssueState)
                     .Run(context)
                     .ContinueWith(t => SetResult(t, context));
                 await CancelDownloads(context);
@@ -208,7 +261,7 @@ namespace Mapna.Transmittals.Exchange.Services.Queues.Incomming
         {
             if (!this.items.TryAdd(result.Id, result) || !base.Enqueue(t => DoEnqueue(t, result)))
             {
-                throw new Exception("Failed to add to queue");
+                //throw new Exception("Failed to add to queue");
             }
             return result;
         }

@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace GN.Library.Functional
 {
-    public class PipeUnrecoveravleException : Exception
+    public class PipeUnrecoverableException : Exception
     {
-        public PipeUnrecoveravleException(string message, Exception innerException = null) : base(message, innerException) { }
+        public PipeUnrecoverableException(string message, Exception innerException = null) : base(message, innerException) { }
     }
     public interface IWithPipe
     {
@@ -77,7 +77,7 @@ namespace GN.Library.Functional
                     return await DoRun(context);
 
                 }
-                catch (PipeUnrecoveravleException err)
+                catch (PipeUnrecoverableException err)
                 {
                     throw err.InnerException ?? err;
                 }
@@ -94,7 +94,12 @@ namespace GN.Library.Functional
         }
 
 
-        public static WithPipe<T> Setup() => new WithPipe<T>();
+        public static WithPipe<T> Setup(Action<WithPipe<T>> configure=null)
+        {
+            var result = new WithPipe<T>();
+            configure?.Invoke(result);
+            return result;
+        }
 
 
     }

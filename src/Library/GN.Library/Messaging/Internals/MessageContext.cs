@@ -10,31 +10,7 @@ using System.Threading.Tasks;
 namespace GN.Library.Messaging.Internals
 {
 
-    class MessageScope : IServiceScope
-    {
-        private IServiceScope scope;
-        private readonly IServiceProvider serviceProvider;
-
-        public IServiceProvider ServiceProvider => scope?.ServiceProvider ?? serviceProvider;
-        public MessageScope(IServiceProvider serviceProvider)
-        {
-            this.serviceProvider = serviceProvider;
-        }
-        public IServiceScope CreateScope()
-        {
-            this.scope?.Dispose();
-            this.scope = this.serviceProvider.CreateScope();
-            return this;
-        }
-
-        public void Dispose()
-        {
-            this.scope?.Dispose();
-            this.scope = null;
-        }
-    }
-
-    public class MessageContext<T> : IMessageContext<T>
+    public class MessageContext<T> : IMessageContext<T>, IMessageContextInternal
     {
         private MessageScope scope;
 
@@ -101,13 +77,36 @@ namespace GN.Library.Messaging.Internals
             return false;
         }
 
+        public Task Ack()
+        {
+            var queueMessage = this.QueueMessage();
 
+            //return this.GetProperty<Func<Task>>("$ack", () => () => Task.CompletedTask).Invoke();
+            if (queueMessage != null)
+            {
+                return queueMessage.Reply("ack");
+            }
+            return Task.CompletedTask;
+
+            //return this.GetProperty<Func<Task>>("$ack", ()=> ()=> Task.CompletedTask).Invoke();
+        }
         public Task Reply(object message)
         {
+            if (message!=null && message is Exception __exp)
+            {
+                message = new Exception($"{__exp.GetBaseException().Message}");
+            }
             var context = new MessageContext<object>(
                 new LogicalMessage<object>(MessageTopic.Create(MessagingConstants.Topics.Reply), message, null), null, this._bus);
+            context.Message.Headers.AddFlag(MessageFlags.Reply);
             context.Message.To(this.Message.From());
             context.Message.InReplyTo(this.Message.MessageId);
+            if ( message !=null && message is Exception _exp)
+            {
+                context.Message.Headers.StatusCode(1);
+                context.Message.Headers.ErrorMessage(_exp.GetBaseException().Message);
+
+            }
             return this._bus.Publish(context);
 
         }
@@ -204,6 +203,7 @@ namespace GN.Library.Messaging.Internals
             return this.scope.CreateScope();
 
         }
+        public CancellationToken CancellationToken => this.Bus?.Advanced().CancellationToken ?? default;
     }
 }
 

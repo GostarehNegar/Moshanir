@@ -266,8 +266,21 @@ namespace GN
             }
             else if (ctor != null)
             {
-                ret = ctor();
-                dic[key] = ret;
+                lock (dic)
+                {
+                    if (dic.TryGetValue(key, out ret))
+                    {
+                        if (ret == null)
+                            return true;
+                        if (ret != null && typeof(T).IsAssignableFrom(ret.GetType()))
+                        {
+                            value = (T)ret;
+                            return true;
+                        }
+                    }
+                    value = ctor();
+                    dic[key] = value;
+                }
                 return true;
             }
             return false;

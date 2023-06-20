@@ -1,45 +1,34 @@
-﻿using GN.Library.Helpers;
-using GN.Library.Identity;
+﻿using GN;
+using GN.Library.Helpers;
 using GN.Library.Messaging;
 using GN.Library.Shared.Entities;
 using GN.Library.Shared.Internals;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-using System.DirectoryServices;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
 using static GN.Library.LibraryConstants;
 
-namespace GN.Library.Services
+namespace GN.Library.Identity
 {
-
-
-    public interface IUserIdentityServices : IIdentityServices, IHostedService
-    {
-        //Task<IQueryable<UserEntity>> GetQueryable();
-        //Task<bool> Authenticate(string userName, string password);
-        Task<UserEntity> AuthenticateUser(string userName, string password);
-        Task<UserEntity> GetUserByToken(string token);
-
-    }
-    class UserServices : BackgroundService, IUserIdentityServices
+    class UserServices_Deprcated : BackgroundService, IUserServices
     {
         private readonly IMessageBus bus;
-        private readonly ILogger<UserServices> logger;
+        private readonly ILogger<UserServices_Deprcated> logger;
         private readonly IMemoryCache cache;
         private readonly ITokenService tokenService;
         private readonly IServiceProvider serviceProvider;
 
         private UserEntity[] users;
 
-        public UserServices(IMessageBus bus,
-                            ILogger<UserServices> logger,
+        public UserServices_Deprcated(IMessageBus bus,
+                            ILogger<UserServices_Deprcated> logger,
                             IMemoryCache cache,
                             ITokenService tokenService, IServiceProvider serviceProvider)
         {
@@ -53,11 +42,11 @@ namespace GN.Library.Services
         {
             try
             {
-                var service = this.serviceProvider.GetServiceEx<IAuthenticationProvider>();
+                var service = serviceProvider.GetServiceEx<IAuthenticationProvider>();
                 if (service == null)
                 {
                     //throw new Exception($"Authentication Service is not registered.");
-                    var res = await AppHost.Rpc.Authenticate(new GN.Library.Shared.Authorization.AuthenticateCommand
+                    var res = await AppHost.Rpc.Authenticate(new Shared.Authorization.AuthenticateCommand
                     {
                         UserName = userName,
                         Password = password
@@ -65,11 +54,11 @@ namespace GN.Library.Services
                     });
                     return res?.UserName != null;
                 }
-                return await this.serviceProvider.GetServiceEx<IAuthenticationProvider>().Authenticate(userName, password);
+                return await serviceProvider.GetServiceEx<IAuthenticationProvider>().Authenticate(userName, password);
             }
             catch (Exception err)
             {
-                this.logger.LogError(
+                logger.LogError(
                     $"An error occured while trying to authenticate user. Err:{err.GetBaseException().Message}");
             }
 
@@ -83,7 +72,7 @@ namespace GN.Library.Services
             try
             {
                 var result = new List<UserIdentityEntity>();
-                if (this.cache.TryGetValue("identities_cached_data", out var items) && items is UserIdentityEntity[] r)
+                if (cache.TryGetValue("identities_cached_data", out var items) && items is UserIdentityEntity[] r)
                 {
                     return r;
                 }
@@ -92,7 +81,7 @@ namespace GN.Library.Services
                 while (true)
                 {
 
-                    var reply = await this.bus
+                    var reply = await bus
                         .CreateMessage(new LoadIdentitiesCommand { Skip = skip, Take = take })
                         .CreateRequest()
                         .WaitFor(x => true)
@@ -109,14 +98,14 @@ namespace GN.Library.Services
                     }
                     skip += take;
                 }
-                this.cache.Set("identities_cached_data", result.ToArray(), TimeSpan.FromMinutes(15));
+                cache.Set("identities_cached_data", result.ToArray(), TimeSpan.FromMinutes(15));
                 return result.ToArray();
 
 
             }
             catch (Exception err)
             {
-                this.logger.LogError(
+                logger.LogError(
                     $"An error occured while trying to load identities. Err:{err.GetBaseException().Message}");
             }
             return new UserIdentityEntity[] { };
@@ -126,18 +115,22 @@ namespace GN.Library.Services
             var result = new List<UserEntity>();
             try
             {
-                var skip = 0;
-                var take = 500;
-                while (true)
+                using (var scope = serviceProvider.CreateScope())
                 {
-                    var _users = await
-                        this.serviceProvider
-                          .GetServiceEx<IUserLoader>()
-                          .LoadUsers(skip, take);
-                    if (_users.Length == 0)
-                        break;
-                    result.AddRange(_users);
-                    skip += take;
+
+                    var skip = 0;
+                    var take = 500;
+                    while (true)
+                    {
+                        var _users = await
+                            scope.ServiceProvider
+                              .GetServiceEx<IUserPrimitiveRepository>()
+                              .LoadUsers(skip, take);
+                        if (_users.Length == 0)
+                            break;
+                        result.AddRange(_users);
+                        skip += take;
+                    }
                 }
             }
             catch (Exception err)
@@ -156,7 +149,7 @@ namespace GN.Library.Services
                 var take = 50;
                 while (true)
                 {
-                    var reply = await this.bus.CreateMessage(new LoadUsersCommand() { Skip = skip, Take = take })
+                    var reply = await bus.CreateMessage(new LoadUsersCommand() { Skip = skip, Take = take })
                         .UseTopic(Subjects.IdentityServices.LoadUsers)
                         .Options(cfg => { cfg.LocalOnly = true; })
                         .CreateRequest()
@@ -174,18 +167,18 @@ namespace GN.Library.Services
                     }
                     else
                     {
-                        this.logger.LogError(
+                        logger.LogError(
                             $"Failed to load Users. This normally happens when User Services is not available.");
                         break;
                     }
                 }
-                this.logger.LogInformation(
+                logger.LogInformation(
                     $"{result.Count} User Successfully loaded.");
                 return result.ToArray();
             }
             catch (Exception err)
             {
-                this.logger.LogError(
+                logger.LogError(
                     $"An error occured while trying to load user cache. Err:{err.GetBaseException().Message}");
             }
             return new UserEntity[] { };
@@ -193,67 +186,69 @@ namespace GN.Library.Services
 
         private async Task<UserEntity[]> GetUsers(bool refersh = false)
         {
-            if (this.users  == null || refersh)
+            if (users == null || refersh)
             {
                 try
                 {
-                    var localy = this.serviceProvider.GetServiceEx<IUserLoader>() != null;
-                    this.users = localy
-                        ? await this.GetUsersLocaly()
-                        : await this.GetUsersRemotely();
-
-                    this.logger.LogInformation(
-                        $"UserCache successfully cached '{this.users.Length}' Users.");
+                    using (var scope = serviceProvider.CreateScope())
+                    {
+                        var localy = scope.ServiceProvider.GetServiceEx<IUserPrimitiveRepository>() != null;
+                        users = localy
+                            ? await GetUsersLocaly()
+                            : await GetUsersRemotely();
+                    }
+                    logger.LogInformation(
+                        $"UserCache successfully cached '{users.Length}' Users.");
                 }
                 catch (Exception err)
                 {
 
-                    this.logger.LogError(
+                    logger.LogError(
                         $"An error occured while trying to load user cache. Err:{err.GetBaseException().Message}");
                 }
-                this.users = this.users ?? new UserEntity[] { };
-                
+                users = users ?? new UserEntity[] { };
+
             }
-            return this.users;
+            return users;
         }
         private async Task<UserEntity[]> _GetUsers()
         {
             try
             {
-                if (this.cache.TryGetValue("users_cached_data", out var items) && items is UserEntity[] r)
+                if (cache.TryGetValue("users_cached_data", out var items) && items is UserEntity[] r)
                 {
                     return r;
                 }
-                var localy = this.serviceProvider.GetServiceEx<IUserLoader>() != null;
-                var result = localy 
-                    ? await this.GetUsersLocaly()
-                    : await this.GetUsersRemotely();
+                var localy = serviceProvider.GetServiceEx<IUserPrimitiveRepository>() != null;
+                var result = localy
+                    ? await GetUsersLocaly()
+                    : await GetUsersRemotely();
 
-                this.logger.LogInformation(
+                logger.LogInformation(
                     $"UserCache successfully cached '{result.Length}' Users.");
-                this.cache.Set("users_cached_data", result, TimeSpan.FromMinutes(15));
+                cache.Set("users_cached_data", result, TimeSpan.FromMinutes(15));
                 return result;
             }
             catch (Exception err)
             {
-                this.logger.LogError(
+                logger.LogError(
                     $"An error occured while trying to load user cache. Err:{err.GetBaseException().Message}");
             }
             return new UserEntity[] { };
         }
 
-       
 
-       
+
+
 
         public async Task<IQueryable<UserEntity>> GetQueryable()
         {
-            return (await this.GetUsersRemotely()).AsQueryable();
+            return (await GetUsers()).AsQueryable();
         }
 
         public async Task<IQueryable<UserIdentityEntity>> GetIdentities()
         {
-            var result = await this.LoadIdentities();
+            var result = await LoadIdentities();
             return result.AsQueryable();
         }
 
@@ -265,19 +260,19 @@ namespace GN.Library.Services
             {
                 if (1 == 0)
                 {
-                    var ids = (await this.LoadIdentities());
+                    var ids = await LoadIdentities();
                     result = ids.FirstOrDefault(x => string.Compare(x.UserPrincipalName, $"{normal.UserName}@{normal.DomianName}.local", true) == 0)
                         ?? ids.FirstOrDefault(x => string.Compare(x.UserPrincipalName, $"{normal.UserName}@{normal.DomianName}", true) == 0);
                 }
                 else
                 {
-                    result = (await this.bus.Rpc.Call<LoadIdentityCommand, LoadIdentityRpply>(new LoadIdentityCommand { UserName = entity.DomainName }))?.Identity;
+                    result = (await bus.Rpc.Call<LoadIdentityCommand, LoadIdentityRpply>(new LoadIdentityCommand { UserName = entity.DomainName }))?.Identity;
 
                 }
             }
             catch (Exception err)
             {
-                this.logger.LogError(
+                logger.LogError(
                     $"An error occured while trying to GetIdentity. {err.Message}");
             }
             return result;
@@ -285,11 +280,11 @@ namespace GN.Library.Services
         }
         public async Task<UserEntity> AuthenticateUser(string userName, string password)
         {
-            if (string.IsNullOrWhiteSpace(userName) || !await this.Authenticate(userName, password))
+            if (string.IsNullOrWhiteSpace(userName) || !await Authenticate(userName, password))
             {
                 return null;
             }
-            var users = await this.GetUsers();
+            var users = await GetUsers();
             var normal = ActiveDirectoryHelper.NormalizeUserName(userName);
             var user = users.FirstOrDefault(u => string.Compare(u.DomainName, $"{normal.DomianName}\\{normal.UserName}", true) == 0);
             if (user != null)
@@ -297,10 +292,10 @@ namespace GN.Library.Services
                 user.UserId = LibraryConventions.Instance.LoginNameToUserId(user.DomainName);
                 if (user.Identity == null || user.Identity.Attributes.Count == 0)
                 {
-                    var identity = (await this.GetIdentity(user));// ?? new UserIdentityEntity { };
+                    var identity = await GetIdentity(user);// ?? new UserIdentityEntity { };
                     if (identity != null && !string.IsNullOrWhiteSpace(identity.UserPrincipalName))
                     {
-                        identity.Token = this.tokenService.GenerateToken(identity.GetClaimsIdentity());
+                        identity.Token = tokenService.GenerateToken(identity.GetClaimsIdentity());
                         user.Identity = identity;
                         user.UserId = identity.UserPrincipalName;
                     }
@@ -317,10 +312,10 @@ namespace GN.Library.Services
                 /// But since the user has been authenticated
                 /// maybe we can generate a pseduo user
                 /// 
-                var identity = await this.GetIdentity(new UserEntity { DomainName = $"{normal.DomianName}\\{normal.UserName}", });
+                var identity = await GetIdentity(new UserEntity { DomainName = $"{normal.DomianName}\\{normal.UserName}", });
                 if (identity != null && !string.IsNullOrWhiteSpace(identity.UserPrincipalName))
                 {
-                    identity.Token = this.tokenService.GenerateToken(identity.GetClaimsIdentity());
+                    identity.Token = tokenService.GenerateToken(identity.GetClaimsIdentity());
                     user = new UserEntity
                     {
                         DomainName = $"{normal.DomianName}\\{normal.UserName}",
@@ -337,12 +332,12 @@ namespace GN.Library.Services
 
         public async Task<UserEntity> GetUserByToken(string token)
         {
-            var f = this.tokenService.ValidateToken(token);
+            var f = tokenService.ValidateToken(token);
             if (f != null)
             {
                 var normalUser = ActiveDirectoryHelper.NormalizeUserName(f.Identity.Name);
                 var pre_windows_user_name = $"{normalUser.DomianName?.Replace(".local", "")}\\{normalUser.UserName}";
-                var users = await this.GetUsersRemotely();
+                var users = await GetUsersRemotely();
                 var result = users.FirstOrDefault(x => string.Compare(x.DomainName, pre_windows_user_name, true) == 0);
 
                 if (result != null)
@@ -358,10 +353,10 @@ namespace GN.Library.Services
                     /// But since the user has been authenticated
                     /// maybe we can generate a pseduo user
                     /// 
-                    var identity = await this.GetIdentity(new UserEntity { DomainName = $"{normalUser.DomianName}\\{normalUser.UserName}", });
+                    var identity = await GetIdentity(new UserEntity { DomainName = $"{normalUser.DomianName}\\{normalUser.UserName}", });
                     if (identity != null && !string.IsNullOrWhiteSpace(identity.UserPrincipalName))
                     {
-                        identity.Token = this.tokenService.GenerateToken(identity.GetClaimsIdentity());
+                        identity.Token = tokenService.GenerateToken(identity.GetClaimsIdentity());
                         var user = new UserEntity
                         {
                             DomainName = $"{normalUser.DomianName}\\{normalUser.UserName}",
@@ -386,21 +381,45 @@ namespace GN.Library.Services
             await Task.Delay(1000);
             while (!stoppingToken.IsCancellationRequested)
             {
-                await this.GetUsers(true);
-                await Task.Delay(15 * 60 * 1000);
+                try
+                {
+                    await GetUsers(true);
+                    await Task.Delay(15 * 60 * 1000);
+                }
+                catch (Exception err)
+                {
+                    logger.LogError($"An error occured while trying to Start 'UserIdentity' Err:{err.GetBaseException().Message}");
+                }
             }
         }
         public override Task StopAsync(CancellationToken cancellationToken)
         {
             return base.StopAsync(cancellationToken);
         }
-        public override  Task StartAsync(CancellationToken cancellationToken)
+        public override Task StartAsync(CancellationToken cancellationToken)
         {
-            this.logger.LogInformation(
+            logger.LogInformation(
                 $"Starting UserIdentity Services");
             return base.StartAsync(cancellationToken);
 
-            
+
+        }
+
+        public async Task<UserEntity> GetByUserName(string userId)
+        {
+            var users = await GetUsers();
+            return users.FirstOrDefault(x => x.UserId == userId);
+
+        }
+
+        public Task<UserEntity> GetByUserId(string userId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<UserEntity> GetById(string id)
+        {
+            throw new NotImplementedException();
         }
     }
 }

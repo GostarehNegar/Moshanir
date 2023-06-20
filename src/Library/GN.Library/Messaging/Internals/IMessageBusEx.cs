@@ -11,11 +11,13 @@ namespace GN.Library.Messaging.Internals
 
     public interface IMessageBusEx : IMessageBus
     {
+        CancellationToken CancellationToken { get; }
         Task Publish(IMessageContext message, CancellationToken cancellationToken = default);
         Task<IMessageBusSubscription> Subscribe(IMessageBusSubscription subscription);
         IMessageBusConfiguration Configuration { get; }
         Task SaveToStream(object[] messages, string stream);
         Task SaveToStream(ILogicalMessage x, bool skipPublish=false);
+        Task Enqueue(IMessageContext context);
         void CancelRequest(IMessageContext request);
         IRequest CreateRequest(IMessageContext request, RequestOptions options=null);
         string EndpointName { get; }

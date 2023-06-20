@@ -11,7 +11,7 @@
 		public bool UseChannels { get; set; }
 		public bool StartMyUpdateService { get; set; }
 		public ChannelStartModel[] Channels { get; set; }
-		public long? LastUpdate { get; set; }
+		public long? LastSynchedOn { get; set; }
 		public string Application { get; set; }
 
         public override string ToString()

@@ -45,13 +45,13 @@ namespace GN.Library.HostedServices
     }
     public class QueuedHostedService : HostedServiceEx
     {
-        private readonly ILogger_Deprecated _logger;
+        private readonly ILogger _logger;
 
         public QueuedHostedService(IBackgroundTaskQueue taskQueue,
             ILoggerFactory loggerFactory)
         {
             TaskQueue = taskQueue;
-            _logger = typeof(QueuedHostedService).GetLogger();// loggerFactory.CreateLogger<QueuedHostedService>();
+            _logger = typeof(QueuedHostedService).GetLoggerEx();// loggerFactory.CreateLogger<QueuedHostedService>();
         }
 
         public IBackgroundTaskQueue TaskQueue { get; }

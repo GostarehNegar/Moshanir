@@ -22,6 +22,8 @@ using System.Collections.Generic;
 using System.Collections;
 using GN.Library.SharePoint.Internals;
 using Microsoft.Extensions.Configuration;
+using Mapna.Transmittals.Exchange.Domain.Outgoing;
+using Mapna.Transmittals.Exchange.Models;
 
 namespace Mapna.Transmittals.Exchange.Tests
 {
@@ -246,9 +248,12 @@ namespace Mapna.Transmittals.Exchange.Tests
             var host = this.GetHost();
             await host.StartAsync();
             var target = host.Services.GetServiceEx<IFileDownloadQueue>();
-            var ctx = target.Enqueue("https://raw.githubusercontent.com/GostarehNegar/Moshanir/main/1.zip", "1.zip");
+            //https://mycart.mapnagroup.com/group_app/ws_dc/moshanirgetfile/tr/1428419
+            var url = "https://mycart.mapnagroup.com/group_app/ws_dc/moshanirgetfile/tr/1428419";
+            var ctx = target.Enqueue(url, "1.zip");
+            //var ctx = target.Enqueue("https://raw.githubusercontent.com/GostarehNegar/Moshanir/main/1.zip", "1.zip");
             //https://raw.githubusercontent.com/GostarehNegar/Moshanir/main/ngrok-v3-stable-windows-amd64.zip
-            var ctx1 = target.Enqueue("https://raw.githubusercontent.com/GostarehNegar/Moshanir/main/ngrok-v3-stable-windows-amd64.zip", "1.zip");
+            //var ctx1 = target.Enqueue("https://raw.githubusercontent.com/GostarehNegar/Moshanir/main/ngrok-v3-stable-windows-amd64.zip", "1.zip");
 
             ctx.OnCompleted += (a, b) =>
             {
@@ -318,6 +323,56 @@ namespace Mapna.Transmittals.Exchange.Tests
 
             await target.Test("");
 
+
+        }
+
+        [TestMethod]
+        public async Task Temp1()
+        {
+            var client = new HttpClient();
+            client.DefaultRequestHeaders.TryAddWithoutValidation("url", "kkk");
+            client.DefaultRequestHeaders.TryAddWithoutValidation("TR_NO", "NO");
+
+
+            var body = "<transmittal internal_letter_no=\"TRANS_01\" sourceid=\"id1\" referred_to=\"\" attach_filename=\"test.pdf\" url=\"http://gnco.ir\" >"+
+                "<document>" +
+                "</document>"+
+                "</transmittal> ";
+            var response = await client.PostAsync("https://mycart.mapnagroup.com/group_app/ws_dc/npx/nepaco/",
+                new StringContent(System.Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(body))));
+            var res =await  response.Content.ReadAsStringAsync();            
+
+        }
+        [TestMethod]
+        public async Task SendTransmittal()
+        {
+            var host = this.GetHost();
+            var repo = host.Services.GetService<ITransmittalRepository>();
+            var docs = await repo.GetDocumentsByTransmittal("MD2-MOS-46");
+            //var trans1 = await repo.GetTransmittal("MD2-MOS-59");
+            //trans1.SendFormal = "Yes";
+            //trans1.IssueState = SPTransmittalItem.Schema.IssueStates.Accept.ToString();
+            await repo.SetTransmittalIssueState("MD2-MOS-59", SPTransmittalItem.Schema.IssueStates.Preparing);
+            
+
+
+
+
+            var trans = new TransmittalOutgoingModel
+            {
+                TransmitallNumber = "some number"
+            };
+            var f = trans.ToXml();
+
+            await host.StartAsync();
+
+            var queue = host.Services.GetService<IOutgoingQueue>();
+            queue.Enqueue("MD2-MOS-46");
+
+            await Task.Delay(60 * 1000);
+
+
+            
 
         }
 

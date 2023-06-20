@@ -25,7 +25,10 @@ namespace GN.Library.Shared.Internals
             public const string DomainName = "domainname";
             public const string AccountName = "samaccountname";
         }
-
+        public UserIdentityEntity()
+        {
+            this.LogicalName = "useridentity";
+        }
         //public Dictionary<string, object> Attributes { get; protected set; } = new Dictionary<string, object>();
 
         //public T GetAttributeValue<T>(string key) => this.Attributes.GetValue<T>(key);

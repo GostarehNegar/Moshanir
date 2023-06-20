@@ -8,23 +8,36 @@ namespace GN.Library
 {
     public class LibOptions
     {
+        public class UserServicesOptions
+        {
+            public bool Enabled { get; set; }
+        }
         public class HealthCheckOptions
         {
             public bool Enabled { get; set; }
             public int  FrequencyInMinutes { get; set; }
         }
         public HealthCheckOptions HealthCheck { get; set; }
+        public UserServicesOptions UserService { get; set; }
         public static LibOptions Current = new LibOptions();
         public static LibOptions Default => Current;
         public LibOptions()
         {
             this.HealthCheck = new HealthCheckOptions();
+            this.UserService = new UserServicesOptions();
+        }
+        public LibOptions Validate()
+        {
+            this.HealthCheck = this.HealthCheck?? new HealthCheckOptions();
+            this.UserService = this.UserService?? new UserServicesOptions();
+            return this;
+
         }
         public string DocumentStoreDefaultDirectory => "./Data";
         public string DocumentStoreDefaultFileName => "db.dat";
         public string GetLocalDbFileName()
         {
-            var result = Path.GetFullPath("./Data/local.db");
+            var result = Path.GetFullPath($"./Data/{AppHost.AppInfo.Name}.db");
             if (!Directory.Exists(Path.GetDirectoryName(result)))
                 Directory.CreateDirectory(Path.GetDirectoryName(result));
             return result;

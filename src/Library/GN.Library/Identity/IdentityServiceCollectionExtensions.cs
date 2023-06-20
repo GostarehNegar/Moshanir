@@ -24,32 +24,35 @@ namespace Microsoft.Extensions.DependencyInjection
 
         //    return services;
         //}
-        public static IServiceCollection AddActiveDirectoryServices(this IServiceCollection services, IConfiguration configuration, Action<ActiveDirectoryOptions> configure)
+        public static IServiceCollection AddActiveDirectoryIdentityServices(this IServiceCollection services, IConfiguration configuration, Action<ActiveDirectoryOptions> configure)
         {
             //var options = new ActiveDirectoryOptions();
             var options = configuration?
                 .GetSection("identity")?
                 .Get<ActiveDirectoryOptions>() ?? new ActiveDirectoryOptions();
             configure?.Invoke(options);
-            services.AddSingleton(options);
-            services.AddSingleton<ActiveDirectoryProviderEx>();
-            services.AddTransient<IAuthenticationProvider>(sp => sp.GetService<ActiveDirectoryProviderEx>());
-            services.AddTransient<IAuthorizationService>(sp => sp.GetService<ActiveDirectoryProviderEx>());
-            services.AddTransient<IUserIdentityProvider>(sp => sp.GetService<ActiveDirectoryProviderEx>());
-            services.AddTransient<IMessageHandler, AuthenticateCommandHandler>();
-            services.AddTransient<IMessageHandlerConfigurator, ActiveDirectoryProviderEx>();
-            services.AddMessagingServices(cfg =>
+            if (!options.Disabled)
             {
-                cfg.Register(subs =>
+                services.AddSingleton(options);
+                services.AddSingleton<ActiveDirectoryProviderEx>();
+                services.AddTransient<IAuthenticationProvider>(sp => sp.GetService<ActiveDirectoryProviderEx>());
+                services.AddTransient<IAuthorizationService>(sp => sp.GetService<ActiveDirectoryProviderEx>());
+                services.AddTransient<IUserIdentityProvider>(sp => sp.GetService<ActiveDirectoryProviderEx>());
+                services.AddTransient<IMessageHandler, AuthenticateCommandHandler>();
+                services.AddTransient<IMessageHandlerConfigurator, ActiveDirectoryProviderEx>();
+                services.AddMessagingServices(cfg =>
                 {
-                    var p = subs.ServiceProvider.GetService<ActiveDirectoryProviderEx>();
-                    subs.UseTopic(typeof(LoadIdentityCommand))
-                    .UseHandler(ctx =>
+                    cfg.Register(subs =>
                     {
-                        return subs.ServiceProvider.GetService<ActiveDirectoryProviderEx>().HandleLoadUserCommand(ctx);
+                        var p = subs.ServiceProvider.GetService<ActiveDirectoryProviderEx>();
+                        subs.UseTopic(typeof(LoadIdentityCommand))
+                        .UseHandler(ctx =>
+                        {
+                            return subs.ServiceProvider.GetService<ActiveDirectoryProviderEx>().HandleLoadUserCommand(ctx);
+                        });
                     });
                 });
-            });
+            }
 
             return services;
         }

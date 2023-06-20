@@ -38,8 +38,6 @@ namespace GN.Library.Messaging.Streams
             this.streamManager = services.GetServiceEx<IStreamManager>();
             this.serializer = services.GetSerializationService();
             this.logger = this.bus.Advanced().ServiceProvider.GetServiceEx<ILogger<EventStreamService>>();
-
-
         }
 
         private async Task Publish(MessagePack x, string stream, Action<IMessageContext> configure)

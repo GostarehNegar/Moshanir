@@ -36,6 +36,7 @@ namespace Mapna.Transmittals.Exchange.Internals
             set => this.SetAttributeValue(Schema.DocumentNumber, value);
         }
 
+        public string DocumentNumber => this.GetAttibuteValue<FieldLookupValue>(Schema.DocumentNumber)?.LookupValue;
 
 
         [Column(Schema.Purpose)]

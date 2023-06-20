@@ -22,7 +22,7 @@ namespace Mapna.Transmittals.Exchange.Internals
         Task<SPJobItem> CreateJob(SPJobItem job);
         Task<SPItem> UpdateJob(SPJobItem job);
         Task DeleteJob(SPJobItem job);
-        Task SetJobStatus(string internalId, string status);
+        Task SetJobStatus(string internalId, string status, string reason = null);
 
         Task<SPJobItem[]> GetInProgressJobs();
         Task<SPJobItem[]> GetPendingJobs();
@@ -44,6 +44,12 @@ namespace Mapna.Transmittals.Exchange.Internals
         Task<SPDocLibItem[]> GetDocumentsByTransmittal(string transmittal);
         Task AttachTransmittalLetter(int id, string fileName, byte[] content);
         Task Test(string path);
+
+        Task<SPTransmittalItem> UpdateTransmittal(SPTransmittalItem item);
+
+        Task SetTransmittalIssueState(string transmittalNumber, SPTransmittalItem.Schema.IssueStates state);
+
+
     }
 
 
@@ -181,7 +187,12 @@ namespace Mapna.Transmittals.Exchange.Internals
         {
             try
             {
-                var message = string.Format(fmt, args);
+                var message = fmt;
+                try
+                {
+                    message = string.Format(fmt, args);
+                }
+                catch { }
                 //Monitor.Enter(this.web);
                 try
                 {
@@ -200,7 +211,7 @@ namespace Mapna.Transmittals.Exchange.Internals
 
         }
 
-        public async Task SetJobStatus(string internalId, string status)
+        public async Task SetJobStatus(string internalId, string status, string reason = null)
         {
             var job = await this.FindJobByInternalId(internalId);
             if (job == null)
@@ -208,6 +219,8 @@ namespace Mapna.Transmittals.Exchange.Internals
                 throw new TransmitalException($"Job Not Found", false);
             }
             job.Status = status;
+            job.StatusReason = reason;
+
             var list = await this.GetWeb().GetJobsList();
             await list.UpdateItem(job);
         }
@@ -332,7 +345,7 @@ namespace Mapna.Transmittals.Exchange.Internals
         {
             var docs = await this.GetWeb().GetDocLib();
             var trans = await this.GetTransmittal("MD2-MOS-11");
-            var atts = await trans.GetAttachments();
+            var atts = await SPListExtensions.GetAttachments(trans);
             var list = await this.GetWeb().GetTransmitalsList();
             var folder = await list.GetRootFolder();
             //await .ListItem.With(x => x.fol)
@@ -445,6 +458,26 @@ namespace Mapna.Transmittals.Exchange.Internals
         {
             return await (await this.GetWeb().GetTransmitalsList())
                 .GetItemById<SPTransmittalItem>(id);
+        }
+
+        public async Task<SPTransmittalItem> UpdateTransmittal(SPTransmittalItem item)
+        {
+            return await (await this.GetWeb()
+                 .GetTransmitalsList())
+                 .UpdateItem(item);
+        }
+
+        public async Task SetTransmittalIssueState(string transmittalNumber, SPTransmittalItem.Schema.IssueStates state)
+        {
+
+            var trans = await this.GetTransmittal(transmittalNumber);
+            if (trans == null)
+            {
+                throw new Exception("Transmittal Not Found");
+            }
+            trans.SendFormal = "Yes";
+            trans.IssueState = state.ToString();
+            await UpdateTransmittal(trans);
         }
     }
 

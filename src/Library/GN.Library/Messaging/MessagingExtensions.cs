@@ -171,7 +171,8 @@ namespace GN.Library.Messaging
         /// <returns></returns>
         public static bool IsReply(this IMessageContext message)
         {
-            var result = message != null && message.Message != null && message.Message.Subject == MessagingConstants.Topics.Reply;
+            var result = message != null && message.Message != null && message.Headers.HasFlag(MessageFlags.Reply) && !string.IsNullOrEmpty(message.Headers.InReplyTo()); /// message.Message.Subject == MessagingConstants.Topics.Reply;
+            //var result = message != null && message.Message != null &&  message.Message.Subject == MessagingConstants.Topics.Reply;
 
             return result;
         }
@@ -196,14 +197,14 @@ namespace GN.Library.Messaging
 
         public static IMessageContext LocalOnly(this IMessageContext context, bool value)
         {
-            context.GetPublishOptions().LocalOnly = value;
+            context.Options().LocalOnly = value;
             return context;
         }
-        public static PublishOptions GetPublishOptions(this IMessageContext context)
+        public static MessageOptions Options(this IMessageContext context)
         {
             return context
                 .Properties
-                .GetOrAddObjectValueWithDeserialization<PublishOptions>(() => PublishOptions.GetDefault(), "$publish_options");
+                .GetValue<MessageOptions>("$publish_options", () => MessageOptions.GetDefault());
 
         }
         public static IMessageTransport GetOrSetTransport(this IMessageContext message, IMessageTransport transport = null)
@@ -278,9 +279,9 @@ namespace GN.Library.Messaging
 
         }
 
-        public static IMessageContext Options(this IMessageContext message, Action<PublishOptions> cfg)
+        public static IMessageContext Options(this IMessageContext message, Action<MessageOptions> cfg)
         {
-            cfg?.Invoke(message.GetPublishOptions());
+            cfg?.Invoke(message.Options());
             return message;
         }
         private static async Task _SaveToStreamEx(IMessageBusEx bus, object[] events, string stream, string streamId, bool skipPublish = false)

@@ -20,7 +20,7 @@ namespace GN.Library.Shared.Entities
             public const string XmppJid = SolutionPrefix + "xmppjid";
             public const string MobilePhone = "mobilephone";
             public const string PreferredNotificationChannel = SolutionPrefix + "preferrednotificationchannel";
-            public const string UserId = "userid";
+            public const string UserName = "username";
             public enum NotificationChannels
             {
                 WindowsAgent = SolutionOpsionSetBase,
@@ -53,27 +53,27 @@ namespace GN.Library.Shared.Entities
             get => this.GetAttributeValue<DynamicEntity>("identity");
             set => this.SetAttributeValue("identity", value);
         }
-        public string UserId
+        public string UserName
         {
             get
             {
-                if (string.IsNullOrWhiteSpace(this.GetAttributeValue<string>(Schema.UserId)) && !string.IsNullOrWhiteSpace(this.DomainName))
+                if (string.IsNullOrWhiteSpace(this.GetAttributeValue<string>(Schema.UserName)) && !string.IsNullOrWhiteSpace(this.DomainName))
                 {
-                    this.SetAttributeValue(Schema.UserId, LibraryConventions.Instance.LoginNameToUserId(this.DomainName));
+                    this.SetAttributeValue(Schema.UserName, LibraryConventions.Instance.LoginNameToUserId(this.DomainName));
 
                 }
-                return this.GetAttributeValue<string>(Schema.UserId);
+                return this.GetAttributeValue<string>(Schema.UserName);
 
             }
             set
             {
-                this.SetAttributeValue(Schema.UserId, value);
+                this.SetAttributeValue(Schema.UserName, value);
             }
         }
 
         public ClaimsIdentity GetClaimsIdentity()
         {
-            var result = this.Identity?.To<UserIdentityEntity>()?.GetClaimsIdentity() ?? new GenericIdentity(this.UserId);
+            var result = this.Identity?.To<UserIdentityEntity>()?.GetClaimsIdentity() ?? new GenericIdentity(this.UserName);
             result.AddClaim(new Claim(ClaimTypesEx.CrmUserId, this.Id));
             return result;
         }

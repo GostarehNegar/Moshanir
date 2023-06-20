@@ -37,7 +37,7 @@ namespace Mapna.Transmittals.Exchange.Services.Queues.Incomming.Steps
                 await context.GetRepository().UpdateJob(job);
             }
             context.Job = job;
-            context.SendLog(LogLevel.Information, $"Starting Job '{job}' On Transmital '{context.Transmittal}'");
+            context.SendLog(LogLevel.Information, $"Starting Job '{job}' On Transmital '{context.Transmittal}' Trial : '{context.Trial}' of '{context.MaxTrials}'");
             return context;
         }
     }

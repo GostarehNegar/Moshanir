@@ -15,7 +15,7 @@ namespace GN.Library.Controllers
 	[Route("api/[controller]")]
 	public class XrmApi2Controller : Controller
 	{
-		protected static readonly ILogger_Deprecated log = typeof(XrmApi2Controller).GetLogger();
+		protected static readonly ILogger log = typeof(XrmApi2Controller).GetLoggerEx();
 		private IWebCommandFactory webCommandFactory;
 
 		public XrmApi2Controller(IWebCommandFactory factory)
@@ -36,7 +36,7 @@ namespace GN.Library.Controllers
 			//WebCommandRequest request = null;
 			var user = HttpContext.User;
 			//log.MethodStart();
-			log.InfoFormat("XrmJS Service API starts. Request: {0}", request);
+			log.LogInformation("XrmJS Service API starts. Request: {0}", request);
 			bool success = false;
             
             WebCommandResponse ret = new WebCommandResponse();
@@ -68,10 +68,10 @@ namespace GN.Library.Controllers
 					return Unauthorized();
 				}
 
-				if (log.HandleException(e))
-				{
-					//throw;
-				}
+				//if (log.HandleException(e))
+				//{
+				//	//throw;
+				//}
 				ret.Status = CommandStatus.Error;
 				ret.Message = e.Message;
 			}

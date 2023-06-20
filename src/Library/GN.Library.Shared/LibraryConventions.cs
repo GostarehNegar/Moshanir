@@ -4,6 +4,7 @@ using System.Text;
 using System.Linq;
 using GN.Library.Shared;
 using System.Security.Claims;
+using GN.Library.Shared.Entities;
 
 namespace GN.Library
 {
@@ -98,6 +99,34 @@ namespace GN.Library
         public string RawSip => Constants.SipRawTopic;
         public string SipRawForChannel(string channel = "*") => $"{Constants.SipRawTopic}/{channel}";
 
+        public Tuple<string, string> NormalizeUserName(string userName)
+        {
+            var domain = "";
+            var user = "";
+            if (userName == null)
+            {
+                return new Tuple<string, string>(user, domain);
+            }
+            if (userName.Contains("@"))
+            {
+                var parts = userName.Split('@');
+                user = parts[0].ToLowerInvariant();
+                domain = parts[1].ToLowerInvariant();
+            }
+            else if (userName.Contains("\\"))
+            {
+                var parts = userName.Split('\\');
+                user = parts[1].ToLowerInvariant();
+                domain = parts[0].ToLowerInvariant();
+            }
+            else
+            {
+
+            }
+            return new Tuple<string, string>(user, domain);
+
+        }
+
 
         public string LoginNameToUserId(string logInName)
         {
@@ -134,6 +163,10 @@ namespace GN.Library
             }
             var uri = new Uri(url);
             return $"{uri.Scheme}://{uri.Host}" + (uri.Port == 0 ? "" : $":{uri.Port}") + LibraryConventions.Constants.MessageBusHubUrl;
+        }
+        public bool IsActivity(DynamicEntity entity)
+        {
+            return entity != null && entity.Attributes != null && entity.Attributes.ContainsKey("acitvityid");
         }
     }
 }

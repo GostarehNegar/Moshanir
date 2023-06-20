@@ -21,8 +21,8 @@ namespace Mapna.Transmittals.Exchange.Services.Queues.Incomming.Steps
                 var service = context.ServiceProvider.GetService<IFileDownloadQueue>();
                 var repo = context.ServiceProvider.GetService<ITransmittalRepository>();
                 var fileName = context.GetDestinationFileName(new TransmittalFileSubmitModel { FileName = $"{context.Transmittal.TR_NO}-Letter.pdf" });
-                var attachments = (await context.TransmittalItem.GetAttachments());
-                var attachment = (await context.TransmittalItem.GetAttachments())
+                var attachments = (await SPListExtensions.GetAttachments(context.TransmittalItem));
+                var attachment = (await SPListExtensions.GetAttachments(context.TransmittalItem))
                         .FirstOrDefault(x => x.Name == Path.GetFileName(fileName));
                 /// We allow only one attachment
                 /// 

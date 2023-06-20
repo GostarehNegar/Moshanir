@@ -8,10 +8,10 @@ using System.Threading.Tasks;
 
 namespace GN.Library.Identity
 {
-    public interface IUserLoader
-    {
-        Task<UserEntity[]> LoadUsers(int skip, int take);
-    }
+    //public interface IUserRepository
+    //{
+    //    Task<UserEntity[]> LoadUsers(int skip, int take);
+    //}
     public interface IIdentityServices : IAuthenticationProvider
     {
         Task<IQueryable<UserEntity>> GetQueryable();

@@ -14,9 +14,7 @@
 
 	</ItemGroup>
 	<ItemGroup>
-	  <Folder Include="Domain\Outgoing\" />
-	</ItemGroup>
-	<ItemGroup>
+	  <ProjectReference Include="..\Library\GN.Library.Api\GN.Library.Api.csproj" />
 	  <ProjectReference Include="..\Library\GN.Library.SharePoint\GN.Library.SharePoint.csproj" />
 	  <ProjectReference Include="..\Library\GN.Library\GN.Library.csproj" />
 	</ItemGroup>

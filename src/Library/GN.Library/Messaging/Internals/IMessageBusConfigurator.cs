@@ -10,6 +10,7 @@ namespace GN.Library.Messaging.Internals
 {
     public interface IMessageBusConfigurator
 	{
+		IMessageBus Bus { get; }
 		IServiceCollection ServiceCollection { get; }
 		IDictionary<string, object> Properties { get; }
 		MessageBusOptions Options { get; }

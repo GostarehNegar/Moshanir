@@ -12,7 +12,7 @@ namespace GN.Library.Messaging.Internals
         Reply = 2,
         Error = 2 ^ 2,
         Ack = 2 ^ 3,
-        RequiresAck = 2 ^ 4,
-        RequiresAcquire = 2 ^ 5
+        QueuedMessage = 2 ^ 4,
+
     }
 }

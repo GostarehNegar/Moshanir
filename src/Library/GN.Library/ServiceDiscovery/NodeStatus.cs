@@ -55,7 +55,7 @@ namespace GN.Library.ServiceDiscovery
             return result;
            
         }
-        public void Handle(NodeStatusData data)
+        public void Handle(NodeStatusData data, string endpoint)
         {
 
             if (data != null && data.Node?.Name != this.Status.Node.Name)
@@ -66,10 +66,10 @@ namespace GN.Library.ServiceDiscovery
                     if (!string.IsNullOrWhiteSpace(data?.Node?.Name))
                     {
                         data.Node.LastSeen = DateTime.UtcNow.Ticks;
+                        data.Node.Endpoint = endpoint;
                         this.Status.Peers[data.Node.Name] = data.Node;
                         foreach (var item in data.Peers ?? new Dictionary<string, NodeData>())
                         {
-
                             if (item.Key != this.Status.Node.Name && !this.Status.Peers.ContainsKey(item.Key))
                             {
                                 this.Status.Peers[item.Key] = item.Value;

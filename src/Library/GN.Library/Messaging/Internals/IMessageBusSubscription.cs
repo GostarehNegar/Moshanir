@@ -8,7 +8,7 @@ using GN.Library.Messaging.Internals;
 namespace GN.Library.Messaging.Internals
 {
     public interface ISubscriptionProperties : IDictionary<string, string> { }
-    public class SubscriptionProperties :  ConcurrentDictionary<string, string>, ISubscriptionProperties
+    public class SubscriptionProperties : ConcurrentDictionary<string, string>, ISubscriptionProperties
     {
         public SubscriptionProperties() : base()
         {
@@ -20,10 +20,11 @@ namespace GN.Library.Messaging.Internals
         }
 
     }
-    public interface IMessageBusSubscription
+    public interface IMessageBusSubscription : IDisposable
     {
         ISubscriptionProperties Properties { get; }
         Guid Id { get; }
+        string QueueName { get; }
         IMessageBusSubscription UseTopic(SubscriptionTopic topic);
         IMessageBusSubscription AddHandler(Func<IMessageContext, Task> handler);
         IMessageBusSubscription AddHandler<T>(Func<IMessageContext<T>, Task> handler);
@@ -35,5 +36,6 @@ namespace GN.Library.Messaging.Internals
         Task Handle(IMessageContext message);
         bool IsDeactive { get; }
         void Deactivate();
+        string RelayEndpoint { get; set; }
     }
 }

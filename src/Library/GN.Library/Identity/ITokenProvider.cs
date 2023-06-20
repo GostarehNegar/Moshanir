@@ -9,7 +9,7 @@ namespace GN.Library.Identity
 {
 	public interface ITokenService
 	{
-		string GenerateToken(ClaimsIdentity identity);
+		string GenerateToken(ClaimsIdentity identity, int expiresAfterHours = 7*24);
 		ClaimsPrincipal ValidateToken(string securityToken);
 	}
 	
@@ -29,13 +29,13 @@ namespace GN.Library.Identity
 		{
 			return new SymmetricSecurityKey(Encoding.ASCII.GetBytes(this.options.SigningKey));
 		}
-		public string GenerateToken(ClaimsIdentity identity)
+		public string GenerateToken(ClaimsIdentity identity, int expiresAfterHours = 7 * 24)
 		{
 			var tokenHandler = new JwtSecurityTokenHandler();
 			var tokenDescriptor = new SecurityTokenDescriptor
 			{
 				Subject = identity,
-				Expires = DateTime.UtcNow.AddDays(7),
+				Expires = DateTime.UtcNow.AddHours(expiresAfterHours),
 				SigningCredentials = new SigningCredentials(this.GetSigningKey(), SecurityAlgorithms.HmacSha256Signature)
 			};
 			var token = tokenHandler.CreateToken(tokenDescriptor);

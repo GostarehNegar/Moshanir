@@ -9,6 +9,11 @@ using System.Threading.Tasks;
 
 namespace GN.Library
 {
+    public enum HostTypes
+    {
+        Generic,
+        Web
+    }
     public class AppBuildOptions //: AppSettings<AppBuildOptions>
     {
         public static AppBuildOptions Current = new AppBuildOptions();

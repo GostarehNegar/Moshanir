@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -24,9 +25,18 @@ namespace Mapna.Transmittals.Exchange.Services.Queues.Download.Steps
         }
         public static async Task<FileDownloadContext> DownloadFileToSharePointTemp(FileDownloadContext ctx)
         {
+            //user: service_user
+            //pass:edms#1401
+            
+
             using (var client = new HttpClient())
             {
                 ctx.SendLog(LogLevel.Information, $"Downloading Starts Url: '{ctx.Url}', Location:'{ctx.Destination}', Trials:{ctx.Trial}");
+                // Basic authorization
+                // Seems that urls do not need authorization.
+                //client.DefaultRequestHeaders.Authorization =
+                //    new AuthenticationHeaderValue( "Basic", Convert.ToBase64String(
+                //            Encoding.ASCII.GetBytes($"service_user:edms#1401")));
                 var response = await client.GetAsync(ctx.Url);
                 response.EnsureSuccessStatusCode();
                 if (!Directory.Exists(Path.GetDirectoryName(Path.GetFullPath(ctx.Destination))))

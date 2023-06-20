@@ -25,9 +25,9 @@ namespace GN
 		int Id { get; }
 		IAppContextValues Values { get; }
 		IAppServices AppServices { get; }
-		IAppDataServices DataServices { get; }
-		IAppUtils Utils { get; }
-		IAppConfiguration AppConfigurations { get; }
+		//IAppDataServices DataServices { get; }
+		//IAppUtils Utils { get; }
+		//IAppConfiguration AppConfigurations { get; }
 		IAppContext Push();
 		IAppContext Parent { get; }
 		IServiceScope Scope { get; }
@@ -65,7 +65,7 @@ namespace GN
 		public IAppUtils Utils => AppHost.Utils;
 		public IAppServices AppServices { get; private set; }
 		public IAppDataServices DataServices => GetService<IAppDataServices>();
-		public IAppConfiguration AppConfigurations => AppHost.Configuration;
+		//public IAppConfiguration AppConfigurations => AppHost.Configuration;
 		public IServiceProvider ServiceProvider
 		{
 			get
@@ -167,16 +167,10 @@ namespace GN
 
 		private ConcurrentDictionary<string, string> headers = new ConcurrentDictionary<string, string>();
 		private ConcurrentDictionary<string, object> cache = new ConcurrentDictionary<string, object>();
-
-
 		private static string GetKey(Type type, string key)
 		{
 			return string.Format("{0}|{1}", type?.FullName, key);
 		}
-
-
-		
-
 		internal static bool _IsNullable(Type type)
 		{
 			return type == null || !type.IsValueType || Nullable.GetUnderlyingType(type) != null;

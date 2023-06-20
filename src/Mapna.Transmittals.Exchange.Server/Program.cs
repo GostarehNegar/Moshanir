@@ -132,7 +132,7 @@ namespace Mapna.Transmittals.Exchange.Server
             s.AddSharePointServices(configuration, cfg => { });
             s.AddTransmittalsExchange(configuration, cfg => { });
             s.AddSwaggerGen(opt => {
-                opt.SwaggerDoc("v1", new OpenApiInfo { Title = "Exchange Api", Version = "v1" });
+                opt.SwaggerDoc("v1", new OpenApiInfo { Title = "Exchange API", Version = "v1" });
             });
             //s.AddSignalRTransport(configuration);
 

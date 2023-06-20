@@ -24,6 +24,16 @@ namespace Mapna.Transmittals.Exchange.Internals
             public const string ToSi = "ToSi";
             public const string DiscFirstLook0 = "DiscFirstLook0";
             public const string TrDateHijri = "TrDateHijri";
+            public const string IssueState = "IssueState";
+            public const string SendFormal = "SendFormal";
+
+            public enum IssueStates
+            {
+                Accept ,
+                Preparing ,
+                Reject ,
+                Waiting 
+            }
             public static string[] DefaultFields => new string[] {
                 ToLook,From,LetterNo,TransmittalNo,ToSi,LetterNo,"CcSi",DiscFirstLook0,TrDateHijri
             };
@@ -66,11 +76,24 @@ namespace Mapna.Transmittals.Exchange.Internals
         [Column(Schema.ToSi)]
         public string ToSI { get => this.GetAttibuteValue<string>(Schema.ToSi); set => this.SetAttributeValue(Schema.ToSi, value); }
 
+        [Column(Schema.IssueState)]
+        public string IssueState { get => this.GetAttibuteValue<string>(Schema.IssueState); set => this.SetAttributeValue(Schema.IssueState, value); }
+
+        [Column(Schema.SendFormal)]
+        public string SendFormal { get => this.GetAttibuteValue<string>(Schema.SendFormal); set => this.SetAttributeValue(Schema.SendFormal, value); }
+
+
         [Column(Schema.TrDateHijri)]
         public DateTime? TrDateHijri
         {
             get => this.GetAttibuteValue<DateTime?>(Schema.TrDateHijri);
             set => this.SetAttributeValue(Schema.TrDateHijri, value);
+        }
+
+        public File[] GetAttachments()
+        {
+            var files = GN.Library.SharePoint.SPListExtensions.GetAttachments(this.ListItem).Result;
+            return files == null || files.Length == 0 ? new File[] { } : files;
         }
 
     }

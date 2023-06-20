@@ -27,6 +27,7 @@ namespace GN.Library.Messaging.Internals
 
         public bool IsDeactive { get; set; }
         public bool NoVersionControl { get; set; }
+        public string QueueName { get; set; }
 
         /// <summary>
         /// When specified, the subscription is relay that receives
@@ -108,8 +109,17 @@ namespace GN.Library.Messaging.Internals
             {
                 return true;
             }
-            if (this.Topic.Subject == LibraryConstants.Subjects.StarStar)
+            if (this.Topic?.Subject == LibraryConstants.Subjects.StarStar)
                 return true;
+            
+            /// Is message for someone else?
+            var to = message.Message?.Headers.To();
+            if (!string.IsNullOrWhiteSpace(to) && string.Compare(to, message.Bus.Advanced().EndpointName, true) != 0)
+            {
+
+                return false;
+            }
+            
             if (message?.Message?.ReplayFor() != null && message?.Message?.ReplayFor() != this.Id.ToString())
             {
                 /// if the message is being replayed for someone else...
@@ -138,8 +148,10 @@ namespace GN.Library.Messaging.Internals
             this.IsDeactive = true;
         }
 
-
-
+        public void Dispose()
+        {
+            this.Deactivate();
+        }
     }
 
 

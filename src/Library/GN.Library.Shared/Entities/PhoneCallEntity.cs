@@ -266,7 +266,11 @@ namespace GN.Library.Shared.Entities
             return (Schema.CallTypes)Enum.Parse(typeof(Schema.CallTypes), CallType);
         }
 
-        
+        public override void Init()
+        {
+            this.Name = this.Subject;
+            base.Init();
+        }
     }
 
 }

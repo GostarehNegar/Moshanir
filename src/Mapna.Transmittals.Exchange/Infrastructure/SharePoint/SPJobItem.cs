@@ -12,6 +12,7 @@ namespace Mapna.Transmittals.Exchange.Internals
         {
             public const string SourceId = "SourceId";
             public const string Status = "Status";
+            public const string StatusReason = "StatusReason";
             public const string Content = "JsonContent";
             public const string State = "State";
             public const string InternalId = "InternalId";
@@ -22,6 +23,7 @@ namespace Mapna.Transmittals.Exchange.Internals
                 public const string InProgress = "In Progress";
                 public const string Completed = "Completed";
                 public const string Failed = "Failed";
+                public const string Waiting = "Waiting";
 
 
             }
@@ -35,6 +37,10 @@ namespace Mapna.Transmittals.Exchange.Internals
 
         [Column(Schema.Status)]
         public string Status { get => this.GetAttibuteValue<string>(Schema.Status); set => this.SetAttributeValue(Schema.Status, value); }
+
+        [Column(Schema.StatusReason)]
+        public string StatusReason { get => this.GetAttibuteValue<string>(Schema.StatusReason); set => this.SetAttributeValue(Schema.StatusReason, value); }
+
 
         [Column(Schema.Content)]
         public string Content { get => this.GetAttibuteValue<string>(Schema.Content); set => this.SetAttributeValue(Schema.Content, value); }

@@ -19,7 +19,7 @@ namespace GN.Library.Messaging.Pipeline
 
         public async Task Handle(IPipelineContext context, Func<IPipelineContext, Task> next)
         {
-            var options = context.MessageContext.GetPublishOptions();
+            var options = context.MessageContext.Options();
             if (context.MessageContext.Message.Headers.ReplayRemainingCount().HasValue)
             {
 

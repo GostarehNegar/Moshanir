@@ -23,10 +23,11 @@ namespace GN.Library.ServiceDiscovery
             this.serviceProvider = serviceProvider;
             this.logger = this.serviceProvider.GetServiceEx<ILogger<NodeService>>();
             this.bus = this.serviceProvider.GetServiceEx<IMessageBus>();
-            this.HeartBitRate =  this.bus.Advanced().Options.HeartBit;
+            this.HeartBitRate = this.bus.Advanced().Options.HeartBit;
 
 
         }
+        public NodeStatusData NodeStatus => GetStatus().Status;
         private NodeStatus GetStatus()
         {
             if (this.status == null)
@@ -54,9 +55,20 @@ namespace GN.Library.ServiceDiscovery
                     await this.bus.CreateMessage(GetStatus().Status)
                         .UseTopic(LibraryConstants.Subjects.ServiceDiscovery.HeartBeatEvent)
                         .Publish();
-                    await Task.Delay(this.HeartBitRate*1000, stoppingToken);
+                    await Task.Delay(this.HeartBitRate * 1000, stoppingToken);
                 };
             });
+        }
+        private async Task GetStatus(IMessageContext context)
+        {
+            await Task.CompletedTask;
+            //var message = context.Cast<NodeStatusData>()?.Message?.Body;
+
+            await this.bus.CreateMessage(GetStatus().Status)
+                        .UseTopic(LibraryConstants.Subjects.ServiceDiscovery.HeartBeatEvent)
+                        .Publish();
+            
+
         }
         private async Task HandleHeartBeat(IMessageContext context)
         {
@@ -64,7 +76,7 @@ namespace GN.Library.ServiceDiscovery
             var message = context.Cast<NodeStatusData>()?.Message?.Body;
             if (message != null)
             {
-                this.GetStatus().Handle(message);
+                this.GetStatus().Handle(message, context.Message.From());
             }
 
         }
@@ -74,6 +86,12 @@ namespace GN.Library.ServiceDiscovery
                 .UseTopic(LibraryConstants.Subjects.ServiceDiscovery.HeartBeatEvent)
                 .UseHandler(this.HandleHeartBeat)
                 .Subscribe();
+
+            await this.bus.CreateSubscription()
+                .UseTopic(LibraryConstants.Subjects.ServiceDiscovery.GetStatus)
+                .UseHandler(this.GetStatus)
+                .Subscribe();
+
 
 
             await base.StartAsync(cancellationToken);
@@ -87,6 +105,13 @@ namespace GN.Library.ServiceDiscovery
         public IEnumerable<ServiceData> GetServices()
         {
             return this.GetStatus().GetServices();
+        }
+
+        public Task PubStatus()
+        {
+            return this.bus.CreateMessage(GetStatus().Status)
+                       .UseTopic(LibraryConstants.Subjects.ServiceDiscovery.HeartBeatEvent)
+                       .Publish();
         }
     }
 }

@@ -22,10 +22,14 @@
 
   <ItemGroup>
     <Compile Remove="Chats\ChatEntity.cs" />
+    <Compile Remove="Internals\LoadIdentitiesCommand.cs" />
+    <Compile Remove="Internals\LoadUsersCommand.cs" />
   </ItemGroup>
 
   <ItemGroup>
     <None Include="Chats\ChatEntity.cs" />
+    <None Include="Internals\LoadIdentitiesCommand.cs" />
+    <None Include="Internals\LoadUsersCommand.cs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="3.0.0" />
@@ -33,8 +37,11 @@
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="Authorization\" />
     <Folder Include="Library\Messages\" />
     <Folder Include="Library\Xrm\" />
+    <Folder Include="MyWork\" />
+    <Folder Include="AppServices\" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System.Web.Services">

@@ -12,10 +12,12 @@ namespace GN.Library.Messaging.Internals
 		ISubscriptionBuilder UseTopic(SubscriptionTopic topic);
 		ISubscriptionBuilder UseTopic(string subject, string stream=null,  long? fromVersion=null, long? toVersion=null);
 		ISubscriptionBuilder UseTopic(Type type, string stream = null,  long? fromVersion = null, long? toVersion = null);
+		ISubscriptionBuilder AddSubject(string subject);
 		ISubscriptionBuilder UseHandler(Func<IMessageContext, Task> handler);
 		ISubscriptionBuilder UseHandler<T>(Func<IMessageContext<T>, Task> handler);
 		ISubscriptionBuilder WithEnpoint(string endpoint);
 		ISubscriptionBuilder WithRelay(string endpoint);
+		ISubscriptionBuilder WithQueue(string queueName);
 		
 		ISubscriptionBuilder WithNoVersionControl();
 
@@ -49,7 +51,13 @@ namespace GN.Library.Messaging.Internals
 
 		public ISubscriptionProperties Properties => this._subscription.Properties;
 
-		public Task<IMessageBusSubscription> Subscribe()
+        public ISubscriptionBuilder AddSubject(string subject)
+        {
+			_subscription.Topic?.AddSubject(subject);
+			return this;
+        }
+
+        public Task<IMessageBusSubscription> Subscribe()
 		{
 			var result = this.subscribed
 				? Task.FromResult<IMessageBusSubscription>(this._subscription)
@@ -110,6 +118,12 @@ namespace GN.Library.Messaging.Internals
         public ISubscriptionBuilder WithNoVersionControl()
         {
 			this._subscription.NoVersionControl = true;
+			return this;
+        }
+
+        public ISubscriptionBuilder WithQueue(string queueName)
+        {
+			this._subscription.QueueName = queueName;
 			return this;
         }
 

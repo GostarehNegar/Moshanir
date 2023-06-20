@@ -18,6 +18,10 @@ namespace GN.Library.Messaging
     //    DateTime Timestamp { get; }
 
     //}
+    public class QueueMessage
+    {
+        public MessagePack Pack { get; set; }
+    }
     public class MessagePack
     {
         public MessagePack()

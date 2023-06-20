@@ -17,7 +17,7 @@ namespace GN.Library.Shared.ServiceDiscovery
         /// </summary>
         public string Name { get; set; }
         public string Category { get; set; }
-        public IDictionary<string, object> Parameters { get; set; }
+        public IDictionary<string, object> Parameters { get; set; } = new Dictionary<string, object>();
         public ulong StartedOn { get; set; }
         public ulong LastSeenOn { get; set; }
         public string Status { get; set; }

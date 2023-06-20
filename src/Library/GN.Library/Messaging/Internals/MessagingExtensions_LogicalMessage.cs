@@ -11,6 +11,20 @@ namespace GN.Library.Messaging
 {
     public static partial class MessagingExtensions
     {
+
+        public static string QueueEndpoint(this IMessageHeader header, string value = null)
+        {
+            if (value != null)
+            {
+                header["#queue-endpoint"] = value;
+            }
+            return header.GetValue<string>("#queue-endpoint");
+        }
+        public static IMessageContext To(this IMessageContext context, string value)
+        {
+            context.Message.Headers.To(value);
+            return context;
+        }
         public static void SetTopic(this MessagePack This, MessageTopic topic)
         {
             This.Subject = topic?.Subject;
@@ -182,6 +196,55 @@ namespace GN.Library.Messaging
             }
             return (MessageFlags)header.GetValue<int>("$flags");
         }
+        public static bool HasFlag(this IMessageHeader header, MessageFlags flag)
+        {
+            return (header.Flags() & flag) == flag;
+        }
+
+        public static string ErrorMessage(this IMessageHeader header,string value)
+        {
+            if (value !=null)
+            {
+                header[LibraryConstants.MessagingConstants.HeaderKeys.ErrorMessage] = value;
+                //header.TrySetValue<int>("statuscode", value.Value);
+            }
+            return header.GetValue<string>(LibraryConstants.MessagingConstants.HeaderKeys.ErrorMessage);
+
+
+        }
+        public static int StatusCode(this IMessageHeader header, int? value)
+        {
+            if (value.HasValue)
+            {
+                //header["statuscode"] = value.Value.ToString();
+                header.TrySetValue<int>(LibraryConstants.MessagingConstants.HeaderKeys.StatusCode, value.Value);
+            }
+            return header.GetValue<int>(LibraryConstants.MessagingConstants.HeaderKeys.StatusCode);
+
+
+        }
+        public static IMessageHeader AddFlag(this IMessageHeader header, MessageFlags flag)
+        {
+            header.Flags(header.Flags() | flag);
+            return header;
+        }
+        public static IMessageHeader RemoveFlag(this IMessageHeader header, MessageFlags flag)
+        {
+            header.Flags(header.Flags() & ~flag);
+            return header;
+        }
+
+        public static bool IsQueuedMessage(this ILogicalMessage message)
+        {
+            return message.Headers.HasFlag(MessageFlags.QueuedMessage);
+        }
+
+        public static IMessageContext WithMessage(this IMessageContext context, Action<ILogicalMessage> action)
+        {
+            action?.Invoke(context.Message);
+            return context;
+        }
+
 
         public static string JsonFormat(this IMessageHeader header, string value = null)
         {
@@ -220,6 +283,22 @@ namespace GN.Library.Messaging
         public static Guid? CrmUserId(this IMessageHeader header)
         {
             return header.Identity().GetCrmUserId();
+        }
+
+        //public static string Queue(this IMessageHeader header, string value = null)
+        //{
+        //    if (value != null)
+        //    {
+        //        header["#queue"] = value;
+        //    }
+        //    return header.GetValue<string>("#queue");
+        //}
+
+        public static IMessageContext QueueMessage(this IMessageContext context, IMessageContext value = null)
+        {
+            return value == null
+                ? context.GetProperty<IMessageContext>("$queuemesssage", null)
+                : context.GetProperty<IMessageContext>("$queuemesssage", () => value);
         }
 
 

@@ -61,7 +61,7 @@ namespace GN.Library.Helpers
                 domainName = userName.Split('\\')[0];
                 userName = userName.Split('\\')[1];
             }
-            else if (domainName.Contains('@'))
+            else if (userName.Contains('@'))
             {
                 domainName = userName.Split('@')[1];
                 userName = userName.Split('@')[0];
@@ -281,7 +281,7 @@ namespace GN.Library.Helpers
             var de = string.IsNullOrWhiteSpace(userName)
                 ? new DirectoryEntry(domainNameOrPath)
                 : new DirectoryEntry(domainNameOrPath, userName, password);
-            var ds = new DirectorySearcher(de);//.AddProperties(DefualtProperties);
+            var ds = new DirectorySearcher(de).AddProperties(DefualtProperties);
 
             ds.SizeLimit = 0;
             ds.PageSize = 500;
@@ -426,8 +426,13 @@ namespace GN.Library.Helpers
             {
                 result.SetAttributeValue(k.Key, k.Value);
             }
-            result.UserName = attributes.ValueOrNull(Schema.UserPrincipalName);
+            result.UserName = attributes.ValueOrNull(Schema.UserPrincipalName);//?? attributes.ValueOrNull(Schema.SamAccountName);
+            if (string.IsNullOrWhiteSpace(result.UserName))
+            {
+                result.UserName = result.AccountName;
+            }
             result.UserName = result.UserName?.ToLowerInvariant();
+            result.Id = result.UserName;
             result.DisplayName = attributes.ValueOrNull(Schema.DisplayName);
             result.IsAdmin = result.GroupNames.Contains("Domain Admins");
             result.Title = attributes.ValueOrNull(Schema.Title);

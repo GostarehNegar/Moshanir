@@ -9,6 +9,7 @@ namespace GN.Library
     public class LibraryConstants
     {
         public const int DefaultTimeout = 15000;
+        public static bool IsNetCore;
         public static string DomianName = "gnco.local";
         public const string PUSH_NOTIFICATION_API_ROUTE = "push-notifications-api";
         public static string SignalRTransportReceiveMethod => "Receive";
@@ -20,6 +21,11 @@ namespace GN.Library
         public const string SipRawTopic = "SIP/RAW";
 
         public const string MessageBusHubUrl = "/eventhub";
+        public class Secret
+        {
+            public string SecretKey = "secret";
+            public string SecrentAccount = "taminwan.tent\\bmsd_admin";
+        }
         public class ChatHubMethodNames
         {
             public const string Authorize = "Authorize";
@@ -33,6 +39,7 @@ namespace GN.Library
         }
         public class MessagingConstants
         {
+            public const int SIGNALR_MAX_BUFFER_SIZE = 512 * 1024;
             public class HeaderKeys
             {
                 public const string StreamName = "$event-stream";
@@ -43,6 +50,8 @@ namespace GN.Library
                 public const string To = "#to_endpoint";
                 public const string InReplyTo = "#in_reply_to";
                 public const string VisitedEndpoints = "#visited_endpoints";
+                public const string StatusCode = "#statuscode";
+                public const string ErrorMessage = "#errormessage";
             }
             public class Topics
             {
@@ -62,11 +71,18 @@ namespace GN.Library
             private const string Library = "Library";
             public const string StarStar = "**";
 
+            public class Messaging
+            {
+                public const string CreateQueue = Library + ".createqueue";
+                public const string QueueMessage = Library + ".queue-message";
+            }
             public class IdentityServices
             {
                 public const string LoadUsers = Library + ".loadusers";
                 public const string UserSignedIn = Library + ".usersignin";
                 public const string UserDisconnected = Library + ".userdisconnected";
+                public const string AuthenticateUser = Library + ".authenticateuser";
+                public const string QueryUser = Library + ".queryuser";
             }
             public class EnityServices
             {
@@ -119,8 +135,9 @@ namespace GN.Library
                 public const string Perfix = "userrequests";
                 public static string WhoAmI => Perfix + ".whoami";
                 public static string Search => Perfix + ".search";
+                public static string SearchResult => Perfix + ".searchresult";
                 public static string FetchPosts => Perfix + ".fetchposts";
-                public static string StartMyUpdates => Perfix + ".my.start";
+                public const string StartMyUpdates = Perfix + ".my.start";
                 public static string MyUpdate => Perfix + ".my.update";
                 public const string GetUpdate = Perfix + ".my.get";
             }

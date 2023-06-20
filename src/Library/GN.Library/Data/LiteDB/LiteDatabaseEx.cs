@@ -7,12 +7,31 @@ using System.Threading.Tasks;
 
 namespace GN.Library.Data.Lite
 {
-	public class LiteDatabaseEx
-	{
-		private readonly string connectionString;
+    public class LiteDatabaseEx
+    {
+        private readonly string connectionString;
 
-		public LiteDatabaseEx(string connectionString)
-		{
+        public class DisposableCollection<T> : IDisposable
+        {
+            public LiteDB.ILiteCollection<T> Collection { get; private set; }
+            LiteDB.LiteDatabase db;
+
+            internal DisposableCollection(LiteDB.LiteDatabase db)
+            {
+                this.Collection = db.GetCollection<T>();
+                this.db = db;
+
+            }
+
+            public void Dispose()
+            {
+                this.db?.Dispose();
+
+            }
+        }
+
+        public LiteDatabaseEx(string connectionString)
+        {
             if (!connectionString.Contains("="))
             {
                 connectionString = $"Filename={connectionString}";
@@ -70,6 +89,10 @@ namespace GN.Library.Data.Lite
             }
             return null;
 
+        }
+        public async Task<DisposableCollection<T>> GetCollection<T>(bool readOnly, CancellationToken cancellationToken)
+        {
+            return new DisposableCollection<T>(await this.Lock(!readOnly, cancellationToken));
         }
 
     }

@@ -26,23 +26,26 @@ namespace GN.Library.Messaging.Pipeline
             var message = context.MessageContext;
             if (message == null)
                 return Task.CompletedTask;
-            if (message.Message.From() == this.bus.EndpointName && !message.Headers.IsReplayingForMe(this.bus.EndpointName))
-                return Task.CompletedTask;
-            var tag = $"seen_message{message.Message.MessageId}";
-            if (this.chache.TryGetValue(tag, out var _m))
+            if (!message.Options().ByPassDuplicateValidation)
             {
-                long? _exixting = _m != null && typeof(long?).IsAssignableFrom(_m.GetType())
-                    ? (long?)_m
-                    : (long?)null;
-                if (_exixting == message.Message.Version)
-                {
+                if (message.Message.From() == this.bus.EndpointName && !message.Headers.IsReplayingForMe(this.bus.EndpointName))
                     return Task.CompletedTask;
+                var tag = $"seen_message{message.Message.MessageId}";
+                if (this.chache.TryGetValue(tag, out var _m))
+                {
+                    long? _exixting = _m != null && typeof(long?).IsAssignableFrom(_m.GetType())
+                        ? (long?)_m
+                        : (long?)null;
+                    if (_exixting == message.Message.Version)
+                    {
+                        return Task.CompletedTask;
 
+                    }
                 }
+                this.chache.Set(tag, message.Message.Version, TimeSpan.FromDays(1));
+                if (message.HasBeenPublishedBy(this.bus.EndpointName) && !message.Headers.IsReplayingForMe(this.bus.EndpointName))
+                    return Task.CompletedTask;
             }
-            this.chache.Set(tag, message.Message.Version, TimeSpan.FromDays(1));
-            if (message.HasBeenPublishedBy(this.bus.EndpointName) && !message.Headers.IsReplayingForMe(this.bus.EndpointName))
-                return Task.CompletedTask;
             if (string.IsNullOrWhiteSpace(message.Message.From()))
             {
                 message.Message.From(this.bus.EndpointName);

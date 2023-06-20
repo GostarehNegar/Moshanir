@@ -67,7 +67,7 @@ namespace Mapna.Transmittals.Exchange.Services
         {
             // The underlying connection was closed
             var result = new SubmitTransmittalReply();
-            result.Failed = true;
+            result.Failed = 1;
             var trials = 0;
             while (trials < 5)
             {
@@ -79,7 +79,7 @@ namespace Mapna.Transmittals.Exchange.Services
                         .Then(ValidateJob)
                         .Run(new TransmittalProcessingContext { Transmittal = transmittal });
                     this.incomming.Enqueue(transmittal, cfg => { });
-                    result.Failed = false;
+                    result.Failed = 0;
                     return result;
                 }
                 catch (Exception err)

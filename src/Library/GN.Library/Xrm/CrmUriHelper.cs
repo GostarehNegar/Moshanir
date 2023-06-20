@@ -56,6 +56,13 @@ namespace GN.Library.Xrm
 				: string.Format("{0}://{1}/XRMServices/2011/Discovery.svc", this.Scheme, this.Host);
 			return new CrmUriHelper(str, OrganizationName);
 		}
+		public CrmUriHelper GetDeploymentServiceUri()
+		{
+			var str = this.Port != 0
+				? string.Format("{0}://{1}:{2}/XRMServices/2011/Delpoyment.svc", this.Scheme, this.Host, this.Port)
+				: string.Format("{0}://{1}/XRMServices/2011/Deployment.svc", this.Scheme, this.Host);
+			return new CrmUriHelper(str, OrganizationName);
+		}
 		public static CrmUriHelper TryCreate(string path, string organizationName)
 		{
 			try

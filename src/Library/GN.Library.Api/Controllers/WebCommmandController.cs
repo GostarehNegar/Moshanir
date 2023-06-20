@@ -15,7 +15,7 @@ namespace GN.Library.Controllers
 	[Route("api/[controller]")]
 	public class WebCommandController : Controller
 	{
-		protected static readonly ILogger_Deprecated log = typeof(WebCommandController).GetLogger();
+		protected static readonly ILogger log = typeof(WebCommandController).GetLoggerEx();
 		private IWebCommandFactory webCommandFactory;
 
 		public WebCommandController(IWebCommandFactory factory)
@@ -33,7 +33,7 @@ namespace GN.Library.Controllers
 		{
 
 			//log.MethodStart();
-			log.InfoFormat("WebCommandController starts. Request: {0}", request);
+			log.LogInformation("WebCommandController starts. Request: {0}", request);
 			bool success = false;
 			WebCommandResponse ret = new WebCommandResponse();
 			try
@@ -56,10 +56,10 @@ namespace GN.Library.Controllers
 			}
 			catch (Exception e)
 			{
-				if (log.HandleException(e))
-				{
-					//throw;
-				}
+				//if (log.HandleException(e))
+				//{
+				//	//throw;
+				//}
 				ret.Status = CommandStatus.Error;
 				ret.Message = e.Message;
 			}

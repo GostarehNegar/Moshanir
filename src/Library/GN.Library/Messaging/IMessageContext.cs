@@ -21,6 +21,10 @@ namespace GN.Library.Messaging
     //	long Sequence { get; }
     //  init(string id, string subject, byte [] data, Idictionary<string,string> header, string typeName, string stream, long? sequence)
     //   }
+    internal interface IMessageContextInternal
+    {
+
+    }
     public interface IMessageContext 
     {
         IDictionary<string, object> Properties { get; }
@@ -67,6 +71,8 @@ namespace GN.Library.Messaging
         IMessageBus Bus { get; }
         IServiceProvider ServiceProvider { get; }
         IServiceScope CreateScope();
+        CancellationToken CancellationToken { get; }
+        Task Ack();
 
     }
     public interface IMessageContext<T> : IMessageContext

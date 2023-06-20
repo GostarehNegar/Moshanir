@@ -35,7 +35,9 @@ namespace GN.Library.Messaging.Pipeline
                     }
                 }
             }
-            if (message?.Subject == MessageTopicHelper.GetTopicByType(typeof(PingBus)))
+            var to = context.MessageContext.Message?.Headers.To();
+            bool toMe = string.IsNullOrWhiteSpace(to) || string.Compare(to, context.MessageContext.Bus.Advanced().EndpointName, true) == 0;
+            if (toMe && message?.Subject == MessageTopicHelper.GetTopicByType(typeof(PingBus)))
             {
                 await context.MessageContext.Reply(new PingBusReply
                 {

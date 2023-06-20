@@ -15,13 +15,13 @@
 
   <ItemGroup>
     <Compile Remove="Contracts\**" />
-    <Compile Remove="Internals\**" />
+    <Compile Remove="MyWork\**" />
     <Compile Remove="_\**" />
     <EmbeddedResource Remove="Contracts\**" />
-    <EmbeddedResource Remove="Internals\**" />
+    <EmbeddedResource Remove="MyWork\**" />
     <EmbeddedResource Remove="_\**" />
     <None Remove="Contracts\**" />
-    <None Remove="Internals\**" />
+    <None Remove="MyWork\**" />
     <None Remove="_\**" />
   </ItemGroup>
 
@@ -36,6 +36,7 @@
     <Compile Remove="Configurations\ConfigurationPoint.cs" />
     <Compile Remove="Configurations\IPersistableConfiguration.cs" />
     <Compile Remove="Data\DynamicEntity.cs" />
+    <Compile Remove="Data\ILocalDataContext.cs" />
     <Compile Remove="FileUpload\FileUpload.cs" />
     <Compile Remove="FileUpload\FileUploadConstants.cs" />
     <Compile Remove="FileUpload\FileUploadController.cs" />
@@ -43,6 +44,9 @@
     <Compile Remove="FileUpload\FileUploadOptions.cs" />
     <Compile Remove="FileUpload\FileUploadService.cs" />
     <Compile Remove="Helpers\RegistryMonitor.cs" />
+    <Compile Remove="Identity\IdentityServices.cs" />
+    <Compile Remove="Identity\IIdentityServices.cs" />
+    <Compile Remove="Identity\UserServices_Deprcated.cs" />
     <Compile Remove="Locks\deprecated\LockManagerService.cs" />
     <Compile Remove="Locks\DistributedCacheLockManager.cs" />
     <Compile Remove="Locks\DistributedLock.cs" />
@@ -112,8 +116,12 @@
     <Compile Remove="TaskScheduling\QuoteOfTheDayTask.cs" />
     <Compile Remove="Xrm\XrmConnetcionString.cs" />
     <Compile Remove="Xrm\XrmExtensions.cs" />
-    <Compile Remove="_App\AppHost_Deprecated.cs" />
+    <Compile Remove="_App\deprecated\AppConfiguration.cs" />
+    <Compile Remove="_App\deprecated\Logger.cs" />
     <Compile Remove="_App\Extensions_DynamicEntity.cs" />
+    <Compile Remove="_App\Logger.cs" />
+    <Compile Remove="_deprecated\AbstractHost.cs" />
+    <Compile Remove="_Library\AbstractHost.cs" />
     <Compile Remove="_Library\AppContext_Deprecated.cs" />
     <Compile Remove="_Library\AppSettings.cs" />
   </ItemGroup>
@@ -139,6 +147,10 @@
     <None Include="Configurations\ConfigurationPoint.cs" />
     <None Include="Configurations\IPersistableConfiguration.cs" />
     <None Include="Data\DynamicEntity.cs" />
+    <None Include="_App\deprecated\AppConfiguration.cs" />
+    <None Include="_App\deprecated\Logger.cs" />
+    <None Include="_deprecated\AbstractHost.cs" />
+    <None Include="_deprecated\ILocalDataContext.cs" />
     <None Include="FileUpload\FileUpload.cs" />
     <None Include="FileUpload\FileUploadConstants.cs" />
     <None Include="FileUpload\FileUploadController.cs" />
@@ -146,6 +158,9 @@
     <None Include="FileUpload\FileUploadOptions.cs" />
     <None Include="FileUpload\FileUploadService.cs" />
     <None Include="Helpers\RegistryMonitor.cs" />
+    <None Include="Identity\IdentityServices.cs" />
+    <None Include="Identity\IIdentityServices.cs" />
+    <None Include="Identity\UserServices_Deprcated.cs" />
     <None Include="Locks\deprecated\DistributedCacheLockManager.cs" />
     <None Include="Locks\deprecated\DistributedLock.cs" />
     <None Include="Locks\deprecated\LockManagerService.cs" />
@@ -186,9 +201,7 @@
     <None Include="TaskScheduling\QuoteOfTheDayTask.cs" />
     <None Include="Xrm\XrmConnetcionString.cs" />
     <None Include="Xrm\XrmExtensions.cs" />
-    <None Include="_App\AppHost_Deprecated.cs" />
     <None Include="_App\Extensions_DynamicEntity.cs" />
-    <None Include="_Library\AppContext_Deprecated.cs" />
     <None Include="_Library\AppSettings.cs" />
   </ItemGroup>
 
@@ -234,7 +247,7 @@
   <ItemGroup>
     <Folder Include="Messaging\NATS\" />
     <Folder Include="Messaging\Streams\InMemory\" />
-    <Folder Include="MyWork\" />
+    <Folder Include="Internals\" />
     <Folder Include="Serialization\Custom\" />
   </ItemGroup>
 

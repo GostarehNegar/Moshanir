@@ -7,6 +7,10 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
+using Mapna.Transmittals.Exchange.Internals;
+using GN.Library.SharePoint;
+using System.IO;
+using Mapna.Transmittals.Exchange.Models;
 
 namespace Mapna.Transmittals.Exchange.Controllers
 {
@@ -27,7 +31,7 @@ namespace Mapna.Transmittals.Exchange.Controllers
         public async Task<ActionResult<string>> Ping()
         {
 
-            return Ok("ok");
+            return Ok("Transmittals Exchange Service is Running.");
 
         }
         [HttpPost]
@@ -45,28 +49,84 @@ namespace Mapna.Transmittals.Exchange.Controllers
                     this.logger.LogInformation(
                         $"Transmittal: {transmittal} successfully queued. {reply.TransmittalId}");
 
-                    reply.Failed = false;
+                    reply.Failed = 0;
 
                     return Ok(reply);
                 }
                 catch (Exception err)
                 {
-                    
+
                     this.logger.LogError(
                         $"An error occured while receiving transmittal: {transmittal}. We will reject it. Err:'{err.Message}'");
 
 
-                    return Ok(new SubmitTransmittalReply { Failed = true, Error = err.GetBaseException().Message, TransmittalId= transmittal.TR_NO });
+                    return Ok(new SubmitTransmittalReply { Failed = 1, Error = err.GetBaseException().Message, TransmittalId = transmittal.TR_NO });
                 }
 
             }
 
         }
+
         [HttpGet]
-        [Route("test")]
-        public async Task<ActionResult> Test()
+        [Route("File/{id}")]
+        public async Task<ActionResult> File([FromRoute] string id)
         {
-            return Ok("ddd");
+            var opt = this.serviceProvider.GetService<TransmittalsExchangeOptions>();
+            var fact = this.serviceProvider.GetService<IClientContextFactory>();
+            try
+            {
+                var str = Encoding.UTF8.GetString(System.Convert.FromBase64String(id));
+                using (var ctx = fact.CreateContext(opt.ConnectionString))
+                {
+                    var stream = ctx.OpenFileByUrl(str);
+                    this.logger.LogInformation(
+                            $"Successfully Served File :'{str}'");
+                    return File(stream, "application/octet-stream", Path.GetFileName(str));
+                }
+            }
+            catch (Exception err)
+            {
+                this.logger.LogError(
+                    $"An error occured while trying to serve file.");
+                return BadRequest(
+                    $"Error:{err.Message}");
+            }
+        }
+        [HttpPost]
+        [Route("SetResult")]
+        public async Task<ActionResult> SetResult([FromBody] MapnaTransmittalFeedbackModel model)
+        {
+            this.logger.LogInformation(
+                $"Tryiing to set result of transmittal: {model.TransmittalNumber}. Code:{model.ResponseCode}");
+            try
+            {
+                using (var repo = this.serviceProvider.GetService<ITransmittalRepository>())
+                {
+                    if (model.GetResponseCode() == 0)
+                    {
+
+                        await repo.SetJobStatus(model.TransmittalNumber, SPJobItem.Schema.Statuses.Completed, model.ResponseDesc);
+                    }
+                    else
+                    {
+                        await repo.SetJobStatus(model.TransmittalNumber, SPJobItem.Schema.Statuses.Failed, model.ResponseDesc);
+                    }
+                }
+                return Ok(new MapnaTransmittalFeedbackModel { 
+                    TransmittalNumber = model.TransmittalNumber,
+                    ResponseCode = "0",
+                    ResponseDesc = "Success"
+                
+                });
+                
+            }
+            catch (Exception err)
+            {
+
+                return BadRequest(
+                    $"{err.GetBaseException().Message}");
+            }
+            return Ok();
         }
     }
 }

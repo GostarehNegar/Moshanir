@@ -31,6 +31,13 @@ namespace GN.Library.SharePoint
 
 
         }
+
+        public static Stream OpenFileByUrl(this ClientContext ctx,string file )
+        {
+            return Microsoft.SharePoint.Client.File.OpenBinaryDirect(ctx, file).Stream;
+            
+            
+        }
         public static string ToUniversalIso8601(this DateTime dateTime)
         {
             return dateTime.ToUniversalTime().ToString("u").Replace(" ", "T");

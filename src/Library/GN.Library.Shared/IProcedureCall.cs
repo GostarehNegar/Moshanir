@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 
 namespace GN.Library.Shared
 {
+    
     public interface IProcedureCall
     {
         Task<TResponse> Call<TRequest, TResponse>(TRequest request, int timeOut = LibraryConstants.DefaultTimeout, string subject = null);

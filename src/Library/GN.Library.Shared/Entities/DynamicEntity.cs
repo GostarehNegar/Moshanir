@@ -40,6 +40,15 @@ namespace GN.Library.Shared.Entities
             public const string ModiefiedOn = "modifiedon";
             public const string CreatedOn = "createdon";
             public const string TimeStamp = "$timestamp";
+            public const string StateCode = "statecode";
+            public const string StatusCode = "statuscode";
+            public const string ModifiedOn = "modifiedon";
+            public const string CreatedBy = "createdby";
+            public const string ModifiedBy = "modifiedby";
+            public const string Owner = "ownerid";
+            public const string OwningUser = "owninguser";
+            public const string OwningTeam = "owningteam";
+            public const string OwningBuisnessUnit = "owningbusinessunit";
         }
         public DynamicEntity()
         {
@@ -175,7 +184,8 @@ namespace GN.Library.Shared.Entities
                 Time = this.Time,
                 Attributes = Attributes,
                 //Properties = Properties,
-                RelatedObjects = RelatedObjects
+                RelatedObjects = RelatedObjects,
+                //Name = Name
             };
             ret.Init();
             return ret;
@@ -190,6 +200,7 @@ namespace GN.Library.Shared.Entities
             ret1.Time = this.Time;
             ret1.Attributes = new DynamicAttributeCollection(Attributes);
             ret1.RelatedObjects = new DynamicEntityCollection(this.RelatedObjects);
+            //ret1.Name = Name;
             ret1.Init();
             return ret1;
             //var ret = new T

@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.CommandLineUtils;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -10,7 +11,7 @@ namespace GN.Library.CommandLines_deprecated
     public class ServerCommand : CommandLine
     {
         protected override string Name => "WinService";
-        public static ILogger_Deprecated logger = typeof(ServerCommand).GetLogger();
+        public static ILogger logger = typeof(ServerCommand).GetLoggerEx();
 
         private CommandOption Install;
         private CommandOption UnInstall;

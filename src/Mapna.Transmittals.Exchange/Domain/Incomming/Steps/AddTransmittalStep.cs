@@ -16,7 +16,7 @@ namespace Mapna.Transmittals.Exchange.Services.Queues.Incomming.Steps
                 t.ToLook = new Microsoft.SharePoint.Client.FieldLookupValue { LookupId = 56 };
                 t.ReferenceNumber = transmittal.TR_NO;
                 t.Title = transmittal.Title;
-                t.TrAction = "FirstIssue";
+                t.TrAction = transmittal.TR_ACTION;// "FirstIssue";
                 t.DiscFirstLook0 = new Microsoft.SharePoint.Client.FieldLookupValue { LookupId = 39 };
             });
 

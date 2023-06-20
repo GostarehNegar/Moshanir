@@ -13,7 +13,13 @@ namespace GN.Library.Messaging.Internals
         public string StreamId { get; private set; }
         public long? FromVersion { get; private set; }
         public long? ToVersion { get; private set; }
-
+        public SubscriptionTopic AddSubject(string subject)
+        {
+            this.Subject = string.IsNullOrWhiteSpace(this.Subject)
+                ? subject
+                : $"{this.Subject},{subject}";
+            return this;
+        }
         public static bool WildCardMatch(string value, string pattern)
         {
             if (value == null && pattern == null)

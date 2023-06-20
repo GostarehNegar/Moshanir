@@ -30,7 +30,7 @@ namespace GN.Library.WebCommands
 		{
 			try
 			{
-				return AppHost.Context.Utils.Deserialize<T1>(str);
+				return AppHost.Utils.Deserialize<T1>(str);
 			}
 			catch { }
 			return default(T1);
@@ -39,7 +39,7 @@ namespace GN.Library.WebCommands
 		protected string Serialize(T2 data)
 		{
 			//return Newtonsoft.Json.JsonConvert.SerializeObject(data);
-			return AppHost.Context.Utils.Serialize2(data);
+			return AppHost.Utils.Serialize2(data);
 		}
 		protected WebCommandResponse response;
 

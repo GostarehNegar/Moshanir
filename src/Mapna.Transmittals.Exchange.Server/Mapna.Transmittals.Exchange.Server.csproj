@@ -21,7 +21,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Library\GN.Library.Win32\GN.Library.Win32.csproj" />
-    <ProjectReference Include="..\Library\GN.Library\GN.Library.csproj" />
     <ProjectReference Include="..\Mapna.Transmittals.Exchange\Mapna.Transmittals.Exchange.csproj" />
   </ItemGroup>
 

@@ -10,7 +10,8 @@ namespace GN.Library.ServerManagement
     {
         public static IServiceCollection AddServerManagement(this IServiceCollection services, IConfiguration configuration, Action<ServerManagmentOptions> configure = null)
         {
-            services.AddHostedService<ServerProcessControler>();
+            services.AddSingleton<ServerProcessControler>();
+            services.AddHostedService(sp => sp.GetService<ServerProcessControler>());
             return services;
         }
     }

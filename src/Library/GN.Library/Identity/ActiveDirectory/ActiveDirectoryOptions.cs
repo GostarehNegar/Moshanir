@@ -7,7 +7,7 @@ namespace GN.Library.Identity.ActiveDirectory
 	public class ActiveDirectoryOptions
 	{
 		const string DefaultPropertyNames = "samaccountname,mail,displayname,title,personalTitle,department,usergroup";
-		public bool Enabled { get; set; }
+		public bool Disabled { get; set; }
 		public ActiveDirectoryOptions()
 		{
 			this.PropertyNames = DefaultPropertyNames;

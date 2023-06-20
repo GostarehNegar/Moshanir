@@ -20,6 +20,8 @@ namespace GN.Library.Shared.ServiceDiscovery
         /// </summary>
         public string Name { get; set; }
 
+        public string Endpoint { get; set; }
+
         /// <summary>
         /// The 'process id' last associated with this Node.
         /// </summary>
@@ -45,6 +47,11 @@ namespace GN.Library.Shared.ServiceDiscovery
 
         public long LastSeen { get; set; }
 
+        public DateTime LastSeenTime => new DateTime(LastSeen, DateTimeKind.Utc).ToLocalTime();
+        public string FirstName
+        {
+            get => this.Name.Split('x')[0];
+        }
         public override string ToString()
         {
             return $"{Name}";

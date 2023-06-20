@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using Mapna.Transmittals.Exchange.Internals;
 using System.Linq;
 using Mapna.Transmittals.Exchange.Services.Queues.Incomming;
+using Mapna.Transmittals.Exchange.Domain.Outgoing;
 
 namespace Mapna.Transmittals.Exchange.Services
 {
@@ -25,7 +26,6 @@ namespace Mapna.Transmittals.Exchange.Services
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             await Task.Delay(1000);
-
             while (!stoppingToken.IsCancellationRequested)
             {
                 try
@@ -34,23 +34,39 @@ namespace Mapna.Transmittals.Exchange.Services
                     {
                         var repo = scope.ServiceProvider.GetService<ITransmittalRepository>();
                         var queue = scope.ServiceProvider.GetService<IIncommingQueue>();
-                        var pendings = await repo.GetPendingJobs();
+                        var outgoing = scope.ServiceProvider.GetService<IOutgoingQueue>();
+                        var pendings = (await repo.GetPendingJobs())
+                               .Where(x => x.Direction == "In").ToArray();
                         pendings
+                            .Where(x=>x.Direction=="In")
                             .Select(x => x.GetTransmittal())
                             .Where(x => x != null)
                             .Select(x => queue.Enqueue(x))
                             .ToArray();
                         this.logger.LogInformation(
                             $"{pendings.Length} Pending Jobs Requeued.");
-
                     }
+                    using (var scope = serviceProvider.CreateScope())
+                    {
+                        var repo = scope.ServiceProvider.GetService<ITransmittalRepository>();
+                        var queue = scope.ServiceProvider.GetService<IIncommingQueue>();
+                        var outgoing = scope.ServiceProvider.GetService<IOutgoingQueue>();
+                        var pendings = (await repo.GetPendingJobs()).Where(x => x.Direction == "Out").ToArray();
+                        pendings
+                            .Where(x => x.Direction == "Out")
+                            .Select(x => outgoing.Enqueue(x.InternalId))
+                            .ToArray();
+                        this.logger.LogInformation(
+                            $"{pendings.Length} Pening Outgoing Jobs Requeued.");
+                    }
+
                 }
                 catch (Exception err)
                 {
                     this.logger.LogError(
                         $"An error occured while trying to watch Job list. {err.GetBaseException().Message}");
                 }
-                await Task.Delay(1 * 60 * 1000, stoppingToken);
+                await Task.Delay(60 * 1000, stoppingToken);
 
             }
         }

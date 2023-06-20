@@ -2,11 +2,14 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace GN.Library.Messaging
 {
     public static partial class MessagingExtensions
     {
+
+
         public static string Endpoint(this ISubscriptionProperties subs, string endpoint = null)
         {
             if (endpoint != null)
@@ -31,8 +34,18 @@ namespace GN.Library.Messaging
             return builder;
         }
 
+        public static IMessageContext WithQueue(this IMessageContext context, string queueName)
+        {
+            context.Options().WithQueue(queueName);
+            return context;
+        }
+        public static IMessageContext WithOptions(this IMessageContext context, Action<MessageOptions> configure)
+        {
+            configure?.Invoke(context.Options());
+            return context;
+        }
 
-        public static T GetProperty<T>(this IMessageContext context, string key, Func<T> constructor)
+        public static T GetProperty<T>(this IMessageContext context, string key, Func<T> constructor = null)
         {
             key = key ?? typeof(T).FullName;
             if (context.Properties.TryGetValue(key, out var _res)

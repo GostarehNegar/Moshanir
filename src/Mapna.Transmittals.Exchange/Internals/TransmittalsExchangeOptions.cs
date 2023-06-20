@@ -6,6 +6,7 @@ namespace Mapna.Transmittals.Exchange.Internals
 {
     public class TransmittalsExchangeOptions
     {
+        public static string MapnaDefaultEndpoint = "https://mycart.mapnagroup.com/group_app/ws_dc/npx/sendtrn/";
         public class ListOptions
         {
             public string Path { get; set; }
@@ -25,5 +26,12 @@ namespace Mapna.Transmittals.Exchange.Internals
         public MasterListOptions MasterList { get; set; }
 
         public string ConnectionString { get; set; }
+
+
+        public string MapnaEndpoint => MapnaDefaultEndpoint;
+
+        public int MaxTrialsInSendinfTransmittals => 2;
+
+        
     }
 }

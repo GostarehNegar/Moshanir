@@ -19,8 +19,6 @@ namespace GN.Library.Identity
         {
             this.authorizationService = authorizationService;
             this.logger = logger;
-            
-            
         }
         public async Task Handle(IMessageContext<AuthenticateCommand> ctx)
         {

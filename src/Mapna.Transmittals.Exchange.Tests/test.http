@@ -1,7 +1,19 @@
 
-@baseUrl = http://172.16.6.78:2350/Transmittals
+@baseUrl = http://172.16.6.78:2450/Transmittals
 ##
-GET http://172.16.6.78:2350/Transmittals/ping
+GET http://172.16.6.78:2450/Transmittals/ping
+
+###
+##
+POST http://77.104.99.86:9000/Transmittals/SetResult
+Content-Type: application/json
+
+{
+    "TransmittalNumber": "123",
+    "ResponseCode":"0",
+    "ResponseDesc":"Success"
+
+}
 
 ###
 # Sample request
@@ -11,7 +23,8 @@ Content-Type: application/json
 {
     "Url": "https://raw.githubusercontent.com/GostarehNegar/Moshanir/main/File1.pdf",
     "ReferedTo": null,
-    "TR_NO": "MAPNA-TRANS-31",
+    "TR_NO": "MAPNA-TRANS-41",
+    "TR_ACTION": "FirstIssue",
     "Title":"Sample Title",
     "Documents": [
         {
@@ -152,3 +165,20 @@ Content-Type: application/json
 }
 
 ###
+# 
+post https://mycart.mapnagroup.com/group_app/ws_dc/npx/getresult
+TR_NO: 1234
+RESPONSE_CODE: 0
+RESPONSE_DESC: Success
+username: moshanir
+password: M1234567
+
+Success
+
+###
+#
+post https://mycart.mapnagroup.com/group_app/ws_dc/npx/nepaco/
+url: http://www.gnco.ir
+
+<transmittal internal_letter_no="TRANS_01">
+</transmittal>

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -18,7 +19,7 @@ namespace GN.Library.Helpers
     }
     public class JsonFolderWatcher<T> : IJsonFolderWatcher<T>
     {
-        public static ILogger_Deprecated logger = typeof(JsonFolderWatcher<T>).GetLogger();
+        public static ILogger logger = typeof(JsonFolderWatcher<T>).GetLoggerEx();
         public string Folder { get; private set; }
         public string Pattern { get; set; }
         private FileSystemWatcher watcher;
@@ -74,7 +75,7 @@ namespace GN.Library.Helpers
                 {
                     if (!(err is TimeoutException && cancellationToken.IsCancellationRequested))
                     {
-                        logger.ErrorFormat(
+                        logger.LogError(
                             $"An error occured while trying to process json file. File:{fileName}, Error:{err.Message}");
                     }
                     else
@@ -136,7 +137,7 @@ namespace GN.Library.Helpers
             }
             catch (Exception err)
             {
-                logger.ErrorFormat(
+                logger.LogError(
                     $"An error occured while trying to handle file:{e.FullPath}");
             }
         }

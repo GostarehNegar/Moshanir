@@ -47,6 +47,7 @@ using GN.Library.Data.Lite;
 using GN.Library.Identity;
 using GN.Library.Shared.Internals;
 using GN.Library.ServiceDiscovery;
+using GN.Library.Messaging.Queues;
 
 namespace GN
 {
@@ -77,15 +78,15 @@ namespace GN
             //services?.AddDataServices();
         }
 
-        public static IWebHostBuilder GetWebHostBuilder<T>(this IAppHostBuilder builder, string[] args = null, Action<AppInfo> configure = null) where T : class
-        {
-            configure?.Invoke(AppInfo.Current);
-            AppInfo.Current.Validate();
+        //public static IWebHostBuilder GetWebHostBuilder<T>(this IAppHostBuilder builder, string[] args = null, Action<AppInfo> configure = null) where T : class
+        //{
+        //    configure?.Invoke(AppInfo.Current);
+        //    AppInfo.Current.Validate();
 
-            var result = WebHost.CreateDefaultBuilder<T>(args);
-            result.UseDefaultServiceProvider(s => s.ValidateScopes = false);
-            return result.UseUrlsEx();
-        }
+        //    var result = WebHost.CreateDefaultBuilder<T>(args);
+        //    result.UseDefaultServiceProvider(s => s.ValidateScopes = false);
+        //    return result.UseUrlsEx();
+        //}
         public static ICurrentUser GetCurrentUser(this IAppContext This)
         {
             return This.Values.GetOrAddValue<ICurrentUser>(x => new CurrentUser());
@@ -131,15 +132,17 @@ namespace GN
         {
             AppHost.Initialize(host);
             AppContext.Initialzie(host.Services);
-            
+
             return host;
         }
         public static IServiceCollection AddGNLib(this IServiceCollection services, IConfiguration configuration, Action<LibOptions> configure, bool addMVC = true)
         {
             var options = LibOptions.Current;
             AppHost.Initialize(configuration: configuration);
+            AppInfo.Current.Name = configuration["name"] ?? Path.GetFileNameWithoutExtension(Environment.GetCommandLineArgs()[0]);
             configuration?.GetSection("Lib")?.Bind(options);
             configure?.Invoke(options);
+            options = options.Validate();
             services.AddSingleton<LibOptions>(options);
             services.AddSingleton<IOptions<LibOptions>>(new OptionsWrapper<LibOptions>(options));
             if (!services.HasService<IAppContext>())
@@ -155,8 +158,8 @@ namespace GN
                 services.AddHostedService<ApplicationLifetimeManager>();
                 services.AddSingleton<IServiceDiscoveryEx>(s => s.GetServiceEx<ServiceDiscoveryEx>());
                 services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-                services.AddTransient<ILogger_Deprecated, AbstractLogger>();
-                services.AddTransient(typeof(IAbstractLogger<>), typeof(AbstractLogger<>));
+                //services.AddTransient<ILogger_Deprecated, AbstractLogger>();
+                //services.AddTransient(typeof(IAbstractLogger<>), typeof(AbstractLogger<>));
                 services.AddTransient(typeof(IDocumentRepository_Deprecated<>), typeof(DocumentRepository_Deprecated<>));
                 services.AddTransient(typeof(IDocumentRepository<>), typeof(DocumentRepository<>));
                 services.AddTransient(typeof(IDocumentRepository<,>), typeof(DocumentRepository<,>));
@@ -176,7 +179,7 @@ namespace GN
                     return AppContext.Current.Values.GetOrAddValue<ICurrentUser>(x => new CurrentUser());
                 }
                 );
-                
+
                 if (options.HealthCheck.Enabled)
                 {
                     services.AddTransient<ServiceStatusTask>();
@@ -184,10 +187,10 @@ namespace GN
                 }
                 services.AddTransient<IAppServices>(x => { return AppContext.Current.AppServices; });
                 //services.AddTransient<IAppContext>(x => { return AppContext.Current; });
-                services.AddTransient<IAppConfiguration>(x => { return AppHost.Context.AppConfigurations; });
-                services.AddTransient<IUserDataContext, UserDataContext>();
-                services.AddTransient<IPublicDataContext, PublicDataContext>();
-                services.AddTransient<ILocalDataContext, LocalDataContext>();
+                //services.AddTransient<IAppConfiguration>(x => { return AppHost.Context.AppConfigurations; });
+                //services.AddTransient<IUserDataContext, UserDataContext>();
+                //services.AddTransient<IPublicDataContext, PublicDataContext>();
+                //services.AddTransient<ILocalDataContext, LocalDataContext>();
 
                 services.AddTransient<LocalDbConfig>();
                 services.AddTransient<ILocalDocumentStore, LocalDb>();
@@ -201,7 +204,7 @@ namespace GN
                 services.AddTransient<IUserDocumentStore, UserDb>();
                 services.AddTransient(typeof(IUserDocumentStoreRepository<,>), typeof(UserDbRepository<,>));
                 services.AddTransient(typeof(IDynamicEntityRepository<>), typeof(DynamicEntityLiteDBRepository<>));
-                services.AddTransient<IGlobalDataContext, GlobalDataContext>();
+                //services.AddTransient<IGlobalDataContext, GlobalDataContext>();
                 services.AddScoped<IAppDataServices, AppDataContext>();
                 services.AddSingleton<IHostedService, HostingService>();
                 services.AddScheduler((sender, args) =>
@@ -220,8 +223,19 @@ namespace GN
                 services.AddSingleton<ITokenService, TokenService>();
                 services.AddSingleton<ILibraryConventions, LibraryConventions>();
                 services.AddSingleton<UserServices>();
-                services.AddSingleton<IUserIdentityServices>(sp => sp.GetServiceEx<UserServices>());
-                services.AddHostedService(sp => sp.GetServiceEx<UserServices>());
+                services.AddSingleton<IUserServices>(sp => sp.GetServiceEx<UserServices>());
+                if (options.UserService.Enabled)
+                {
+                    services.AddSingleton<LocalUserRepository>();
+                    services.AddTransient<ILocalUserRepository>(sp => sp.GetService<LocalUserRepository>());
+                    services.AddSingleton<LocalUserServices>();
+                    services.AddHostedService(sp => sp.GetServiceEx<LocalUserServices>());
+                }
+
+                if (configuration.GetMessaginQueueOptions().Enabled)
+                {
+                    services.AddMessagingQueue(configuration.GetMessaginQueueOptions());
+                }
             }
             return services;
         }
@@ -245,10 +259,10 @@ namespace GN
         internal static void AddLibraryCoreServices(this IServiceCollection services)
         {
             var options = AppBuildOptions.Current;
-            if (!services.HasService<ILogger_Deprecated>())
+            if (!services.HasService<IWebCommand>())
             {
-                services.AddTransient<ILogger_Deprecated, AbstractLogger>();
-                services.AddTransient(typeof(IAbstractLogger<>), typeof(AbstractLogger<>));
+                //services.AddTransient<ILogger_Deprecated, AbstractLogger>();
+                //services.AddTransient(typeof(IAbstractLogger<>), typeof(AbstractLogger<>));
                 services.AddTransient(typeof(IDocumentRepository_Deprecated<>), typeof(DocumentRepository_Deprecated<>));
                 services.AddTransient(typeof(IDocumentRepository<>), typeof(DocumentRepository<>));
                 services.AddTransient<IJsonSerializer, JsonSerializerEx>();
@@ -265,11 +279,11 @@ namespace GN
                 services.AddTransient<IScheduledTask, ServiceStatusTask>();
                 services.AddTransient<IAppServices>(x => { return AppContext.Current.AppServices; });
                 services.AddTransient<IAppContext>(x => { return AppContext.Current; });
-                services.AddTransient<IAppConfiguration>(x => { return AppContext.Current.AppConfigurations; });
-                services.AddTransient<IUserDataContext, UserDataContext>();
-                services.AddTransient<IPublicDataContext, PublicDataContext>();
-                services.AddTransient<ILocalDataContext, LocalDataContext>();
-                services.AddTransient<IGlobalDataContext, GlobalDataContext>();
+                //services.AddTransient<IAppConfiguration>(x => { return AppContext.Current.AppConfigurations; });
+                //services.AddTransient<IUserDataContext, UserDataContext>();
+                //services.AddTransient<IPublicDataContext, PublicDataContext>();
+                //services.AddTransient<ILocalDataContext, LocalDataContext>();
+                //services.AddTransient<IGlobalDataContext, GlobalDataContext>();
                 services.AddScoped<IAppDataServices, AppDataContext>();
                 services.AddSingleton<IHostedService, HostingService>();
                 services.AddScheduler((sender, args) =>
@@ -292,13 +306,17 @@ namespace GN
             ServerFeatures = This.ServerFeatures;
             GN.AppContext.Initialzie(This.ApplicationServices);
         }
-        public static AppBuildOptions GetBuildOptions(this IAppConfiguration This)
+        public static AppBuildOptions GetBuildOptions(this IConfiguration This)
         {
             return AppBuildOptions.Current;
         }
-        public static ILogger_Deprecated GetLogger(this Type This)
+        //public static ILogger_Deprecated GetLogger(this Type This)
+        //{
+        //    return AppHost.GetLogger(This);
+        //}
+        public static ILogger GetLoggerEx(this Type type)
         {
-            return AppHost.GetLogger(This);
+            return AppHost.Services.GetService<ILoggerFactory>().CreateLogger(type); 
         }
         private static T GetService<T>()
         {
@@ -464,7 +482,7 @@ namespace GN
         }
         public static string GetAppUrl(this IAppUtils This, bool ExcludeLocalHost = false, int? port = null)
         {
-            return This.GetAppUri(ExcludeLocalHost, port:port)?.AbsoluteUri;
+            return This.GetAppUri(ExcludeLocalHost, port: port)?.AbsoluteUri;
 
         }
         /// <summary>
@@ -557,7 +575,7 @@ namespace GN
             var _result = new List<string>();
             foreach (var item in result)
             {
-                if (1==0 && item.Contains("[::]"))
+                if (1 == 0 && item.Contains("[::]"))
                 {
                     foreach (var ip in GetLocalIPs(null))
                     {
@@ -650,7 +668,7 @@ namespace GN
         {
             return Convert<T>(source, userSerialization);
         }
-        
+
         public static bool TryConvert(object source, Type type, out object result, bool useSerialization = true)
         {
             return GN.Library.Helpers.Converter.TryConvert(source, type, out result, useSerialization);

@@ -16,6 +16,9 @@ using System.Diagnostics;
 using GN.Library.Natilus.Messaging;
 using GN.Library.Messaging.Messages;
 using System.Reflection;
+using GN.Library.Messaging.Queues;
+using GN.Library.Shared.Messaging.Messages;
+
 namespace GN.Library.Messaging.Internals
 {
     class MessageBus : BackgroundService, IMessageBusEx, IMessagingServices, IMessageBusConfiguration, IProcedureCall
@@ -29,6 +32,8 @@ namespace GN.Library.Messaging.Internals
         protected PipelineQueue queue;
         private Task subscriptionTasks;
         private ILogger logger;
+        private CancellationToken _cancellationToken = default;
+        public CancellationToken CancellationToken => this._cancellationToken;
 
         private IMemoryCache chache;
         List<IPipelineStep> steps;
@@ -44,6 +49,7 @@ namespace GN.Library.Messaging.Internals
             this.chache = this.serviceProvider.GetServiceEx<IMemoryCache>();
             this.logger = this.serviceProvider.GetServiceEx<ILogger<MessageBus>>();
             this.configurator = configurator ?? serviceProvider.GetServiceEx<MessageBusConfigurator>();
+            this.configurator.Bus = this;
             this.queue = this.configurator.Options.NumberOfQueues > 0 ? new PipelineQueue(this.configurator.Options.NumberOfQueues)
                 : null;
             Bus = Bus ?? this;
@@ -91,7 +97,7 @@ namespace GN.Library.Messaging.Internals
                     var bytes = (ReadOnlyMemory<byte>)body;
                     var pack = this.GetSerializationService().DecodeMessagePack(bytes.ToArray());
                     context = new MessageContext<object>(LogicalMessage.Unpack(pack), null, this);
-                    this.logger.LogDebug(
+                    this.logger.LogTrace(
                         $"EventBus received message. Id:{context?.Message?.MessageId}, Transport:{transport.Name}");
                 }
                 if (body != null && body.GetType() == typeof(string))
@@ -195,6 +201,13 @@ namespace GN.Library.Messaging.Internals
                     .UseTopic(MessagingConstants.Topics.OpenStream)
                     .Publish();
             }
+            if (!string.IsNullOrWhiteSpace(subscription.QueueName))
+            {
+                await this.serviceProvider.GetServiceEx<IQueueManagerService>()
+                    .Subscribe(subscription, this.CancellationToken);
+               
+
+            }
             foreach (var transport in this.GetTransports())
             {
                 await transport.Subscribe(subscription);
@@ -202,128 +215,7 @@ namespace GN.Library.Messaging.Internals
             }
             return subscription;
         }
-        //private Task InvalidMessageStep(IPipelineContext context, Func<IPipelineContext, Task> next)
-        //{
-        //    if (context?.MessageContext == null)
-        //        throw new Exception("Invalid or null context");
-        //    var message = context.MessageContext;
-        //    if (message == null)
-        //        return Task.CompletedTask;
-        //    if (message.Message.From() == this.EndpointName)
-        //        return Task.CompletedTask;
-        //    var tag = $"seen_message{message.Message.MessageId}";
-
-        //    if (this.chache.TryGetValue(tag, out var _))
-        //    {
-        //        // Already Seen
-        //        return Task.CompletedTask;
-        //    }
-        //    this.chache.Set(tag, message.Message.MessageId, TimeSpan.FromDays(1));
-        //    if (message.HasBeenPublishedBy(this.EndpointName))
-        //        return Task.CompletedTask;
-        //    if (string.IsNullOrWhiteSpace(message.Message.From()))
-        //    {
-        //        message.Message.From(this.EndpointName);
-        //    }
-
-        //    return next(context);
-        //}
-        //private async Task ControlStep(IPipelineContext context, Func<IPipelineContext, Task> next)
-        //{
-        //    var message = context.MessageContext?.Message;
-        //    if (message.Topic.Subject == MessagingMapper.GetTopicByType(typeof(QueryHandler)))
-        //    {
-        //        var _message = message.Cast<QueryHandler>();
-        //        if (_message != null)
-        //        {
-        //            var messageContext = this.CreateContext(MessageTopic.Create(_message.Body.TopicName, _message.Topic.Stream), "query");
-        //            var handler = this.subscriptions.Query(messageContext);
-        //            if (handler.Count() > 0)
-        //            {
-        //                await context.MessageContext.Reply(new QueryHandlerReply { EndpointName = this.configurator.Options.GetEndpointName(), IsReady = true });
-        //            }
-        //        }
-        //    }
-        //    if (message?.Topic?.Subject == MessagingMapper.GetTopicByType(typeof(PingBus)))
-        //    {
-        //        await context.MessageContext.Reply(new PingBusReply
-        //        {
-        //            Name = context.MessageContext.Bus.Advanced().EndpointName
-        //        });
-        //    }
-        //    await next(context);
-        //}
-        //private async Task InternalPublishStep(IPipelineContext context, Func<IPipelineContext, Task> next)
-        //{
-        //    var handlers = this.subscriptions.Query(context.MessageContext)
-        //        .Select<IMessageBusSubscription, Func<IMessageContext, Task>>(x => x.Handle)
-        //        .ToArray();
-        //    await Task.WhenAny(
-        //        context.CancellationToken.AsTask(),
-        //        Task.WhenAll(handlers
-        //            .Select(x => x(context.MessageContext))));
-        //    await next(context);
-        //}
-        //private async Task TransportPublishStep(IPipelineContext context, Func<IPipelineContext, Task> next)
-        //{
-        //    var options = context.MessageContext.GetPublishOptions();
-        //    if (!options.LocalOnly)
-        //    {
-        //        var handlers =
-        //            this.GetTransports()
-        //            .Where(x => options.TransportMatch(x))
-        //            .Where(x => x.Matches(context.MessageContext))
-        //            .Select<IMessageTransport, Func<IMessageContext, Task>>(x => x.Publish)
-        //            .ToArray();
-        //        await Task.WhenAny(
-        //                context.CancellationToken.AsTask(),
-        //                Task.WhenAll(
-        //                    handlers.Select(x => x(context.MessageContext))));
-        //    }
-        //    await next(context);
-        //}
-        //public Task HandleReplyStep(IPipelineContext context, Func<IPipelineContext, Task> next)
-        //{
-        //    var message = context.MessageContext;
-        //    if (message.IsReply() && message.Message.To() == this.EndpointName)
-        //    {
-        //        var reply_to = message.Message.InReplyTo(null);
-        //        if (reply_to != null &&
-        //        this.requests.TryGetValue(reply_to, out var request) &&
-        //        request.SetReply(message))
-        //        {
-        //            this.requests.TryRemove(reply_to, out var _);
-        //        }
-        //    }
-        //    if (message.IsAquire() && message.Message.To() == this.EndpointName)
-        //    {
-        //        var reply_to = message.Message.InReplyTo(null);
-        //        if (reply_to != null &&
-        //        this.requests.TryGetValue(reply_to, out var request))
-        //        {
-        //            return request.Acquire(message);
-
-        //        }
-        //    }
-        //    return next(context);
-        //}
-
-        //private List<IPipelineStep> GetPipelineSteps_LocalOnly(bool refersh = false)
-        //{
-        //    if (this.local_only_steps == null || refersh)
-        //    {
-        //        this.local_only_steps = new List<IPipelineStep>();
-        //        //var options = message.GetPublishOptions();
-        //        //this.local_only_steps.Add(new PipelineStep(InvalidMessageStep));
-        //        this.local_only_steps.Add(new InvalidMessageStep(this,this.logger));
-        //        this.local_only_steps.Add(new PipelineStep(ControlStep));
-        //        this.local_only_steps.Add(new SaveToStreamStep());
-        //        this.local_only_steps.Add(new PipelineStep(HandleReplyStep));
-        //        this.local_only_steps.AddRange(this.Configuration.GetSteps(GN.Library.Messaging.Pipeline.Pipelines.Outgoing));
-        //        this.local_only_steps.Add(new PipelineStep(this.InternalPublishStep));
-        //    }
-        //    return this.local_only_steps;
-        //}
+        
         private List<IPipelineStep> GetPipelineSteps(bool refersh = false)
         {
             if (this.steps == null || refersh)
@@ -337,6 +229,7 @@ namespace GN.Library.Messaging.Internals
                 //this.steps.Add(new PipelineStep(ControlStep));
                 this.steps.Add(new ControlStep(this));
                 this.steps.Add(new SaveToStreamStep());
+                this.steps.Add(new QueueStep());
                 //this.steps.Add(new PipelineStep(HandleReplyStep));
                 this.steps.Add(new HandleReplyStep(this));
                 this.steps.AddRange(this.Configuration.GetConfiguredSteps(GN.Library.Messaging.Pipeline.Pipelines.Outgoing));
@@ -401,7 +294,8 @@ namespace GN.Library.Messaging.Internals
                 x.Configure(builder);
                 return builder.Subscribe();
             }).ToList();
-            foreach (var handler in this.serviceProvider.GetServiceEx<IEnumerable<IMessageHandler>>())
+            var sp = this.serviceProvider;
+            foreach (var handler in sp.GetServiceEx<IEnumerable<IMessageHandler>>())
             {
                 foreach (var _type in handler.GetType()
                     .GetInterfaces()
@@ -426,16 +320,6 @@ namespace GN.Library.Messaging.Internals
                             {
                                 throw new Exception($"Unexpected Cast Error! {_type.FullName}");
                             }
-
-
-                            //var __ctx = new object[] { null };
-                            //if ((bool)_ctx.GetType().GetMethod(nameof(_ctx.TryCast)).MakeGenericMethod(_type)
-                            //    .Invoke(_ctx, __ctx))
-                            //{
-                            //    return (Task)method.Invoke(handler, new object[] { __ctx[0] });
-                            //}
-                            //else
-                            //    throw new Exception("Unexpected Cast Error!");
                         });
                     tasks.Add(builder.Subscribe());
                 }
@@ -454,6 +338,7 @@ namespace GN.Library.Messaging.Internals
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            this._cancellationToken = stoppingToken;
             return this.queue != null
                 ? this.queue.Start(stoppingToken)
                 : Task.CompletedTask;
@@ -608,6 +493,14 @@ namespace GN.Library.Messaging.Internals
             var result = new MessageContext<object>(LogicalMessage.Unpack(message), null, this);
             return result;
 
+        }
+
+        public Task Enqueue(IMessageContext context)
+        {
+            var manager = this.ServiceProvider.GetService<IQueueManagerService>();
+            return manager.Enqueue(context,this._cancellationToken);
+
+            
         }
     }
 }

@@ -1,4 +1,7 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using GN.Library.Messaging;
+using GN.Library.ServiceDiscovery;
+using GN.Library.Shared.ServiceDiscovery;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
@@ -28,11 +31,52 @@ namespace GN.Library.ServerManagement
         private Process p;
         private readonly ILogger<ServerProcessControler> logger;
         private readonly IServiceProvider serviceProvider;
+        public ProcessWrapper GetProcessById( int processId)
+        {
+            return this.processes
+                .FirstOrDefault(x => x.Process != null && x.Process.Id == processId);
+        }
+        private async Task HandleNode()
+        {
+            try
+            {
+                await Task.CompletedTask;
+                var nodeStatus = this.serviceProvider.GetServiceEx<IServiceDiscovery>().NodeStatus;
+                foreach (var peer in nodeStatus.Peers.Values)
+                {
+                    if (int.TryParse(peer.ProcessId, out var _id))
+                    {
+                        var p = this.processes.FirstOrDefault(x => x.Process != null && x.Process.Id == _id);
+                        if (p == null)
+                        {
+                            var process = Process.GetProcessById(_id);
+                            this.processes.Add(new ProcessWrapper(process,
+                                peer,
+                                this.serviceProvider.GetServiceEx<ILoggerFactory>().CreateLogger<ProcessWrapper>(), 
+                                this.Configuration));
+                        }
+
+                    }
+
+                }
+            }
+            catch (Exception err)
+            {
+
+            }
+        }
 
         public async Task Start()
         {
             try
             {
+                await this.HandleNode();
+                await this.serviceProvider.GetServiceEx<IMessageBus>()
+                   .CreateSubscription()
+                   .UseTopic(LibraryConstants.Subjects.ServiceDiscovery.HeartBeatEvent)
+                   .UseHandler(ctx => this.HandleNode())
+                   .Subscribe();
+
                 this.processes = Configuration
                 .GetSection("Services").Get<List<ServiceInfo>>()
                 .Select(x => new ProcessWrapper(x, this.serviceProvider.GetServiceEx<ILoggerFactory>().CreateLogger<ProcessWrapper>(), this.Configuration))
