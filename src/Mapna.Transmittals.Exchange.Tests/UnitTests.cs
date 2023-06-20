@@ -348,6 +348,10 @@ namespace Mapna.Transmittals.Exchange.Tests
         {
             var host = this.GetHost();
             var repo = host.Services.GetService<ITransmittalRepository>();
+
+            var b = await repo.GetWaitingTransmittals();
+
+            return;
             var docs = await repo.GetDocumentsByTransmittal("MD2-MOS-46");
             //var trans1 = await repo.GetTransmittal("MD2-MOS-59");
             //trans1.SendFormal = "Yes";

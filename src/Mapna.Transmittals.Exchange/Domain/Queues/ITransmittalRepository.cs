@@ -49,6 +49,8 @@ namespace Mapna.Transmittals.Exchange.Internals
 
         Task SetTransmittalIssueState(string transmittalNumber, SPTransmittalItem.Schema.IssueStates state);
 
+        Task<SPTransmittalItem[]> GetWaitingTransmittals();
+
 
     }
 
@@ -478,6 +480,18 @@ namespace Mapna.Transmittals.Exchange.Internals
             trans.SendFormal = "Yes";
             trans.IssueState = state.ToString();
             await UpdateTransmittal(trans);
+        }
+
+        public async Task<SPTransmittalItem[]> GetWaitingTransmittals()
+        {
+            var list = (await this.GetWeb()
+                 .GetTransmitalsList());
+            return (await list.GetQueryable()
+                .Where(x => x.IssueState == "Waiting" && x.From == "MOS")
+                .ToArrayAsync())
+                .Where(x => x.ToSI == "MD2")
+                .ToArray();
+
         }
     }
 
