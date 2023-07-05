@@ -24,6 +24,7 @@ using GN.Library.SharePoint.Internals;
 using Microsoft.Extensions.Configuration;
 using Mapna.Transmittals.Exchange.Domain.Outgoing;
 using Mapna.Transmittals.Exchange.Models;
+using Mapna.Transmittals.Exchange.Infrastructure.SharePoint;
 
 namespace Mapna.Transmittals.Exchange.Tests
 {
@@ -341,6 +342,16 @@ namespace Mapna.Transmittals.Exchange.Tests
             var response = await client.PostAsync("https://mycart.mapnagroup.com/group_app/ws_dc/npx/nepaco/",
                 new StringContent(System.Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(body))));
             var res =await  response.Content.ReadAsStringAsync();            
+
+        }
+        [TestMethod]
+        public async Task EnsureListsTest()
+        {
+            var host = this.GetHost();
+            var options = host.Services.GetServiceEx<TransmittalsExchangeOptions>();
+            var context = host.Services.GetServiceEx<IClientContextFactory>()
+                .CreateContext(options.ConnectionString);
+            await TransmittalsWebHelper.EnsureLists(context, host.Services);
 
         }
         [TestMethod]
