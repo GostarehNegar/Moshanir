@@ -42,7 +42,7 @@ namespace Mapna.Transmittals.Exchange.Tests
                    s.AddSharePointServices(c.Configuration, cfg => { });
                    s.AddTransmittalsExchange(c.Configuration, cfg =>
                    {
-                       cfg.ConnectionString = "Url=http://dcc.moshanir.co:90/ardakan;UserName=tem_dc;Password=D@c2023;Domain=moshanir";
+                      // cfg.ConnectionString = "Url=http://dcc.moshanir.co:90/ardakan;UserName=tem_dc;Password=D@c2023;Domain=moshanir";
                    });
                })
                .Build()

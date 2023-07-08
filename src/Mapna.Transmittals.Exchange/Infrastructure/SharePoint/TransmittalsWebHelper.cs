@@ -67,7 +67,7 @@ namespace Mapna.Transmittals.Exchange.Infrastructure.SharePoint
             var result = false;
             try
             {
-                var log_title = "Job1";
+                var log_title = "Jobs";
                 var lst = await EnsureList(log_title, "Transmittal Exchange Jobs");
                 if (lst == null)
                 {
@@ -98,6 +98,7 @@ namespace Mapna.Transmittals.Exchange.Infrastructure.SharePoint
                             $"Failed to ensure field '{field.Item1}' on list '{log_title}'");
                     }
                 }
+                result = true;
             }
             catch (Exception err)
             {
@@ -111,7 +112,7 @@ namespace Mapna.Transmittals.Exchange.Infrastructure.SharePoint
             var result = false;
             try
             {
-                var log_title = "Log1";
+                var log_title = "Log";
                 var lst = await EnsureList(log_title, "Transmittal Exchange Logs");
                 if (lst == null)
                 {
@@ -135,6 +136,7 @@ namespace Mapna.Transmittals.Exchange.Infrastructure.SharePoint
                             $"Failed to ensure field '{field.Item1}' on list '{log_title}'");
                     }
                 }
+                result = true;
 
             }
             catch (Exception err)
