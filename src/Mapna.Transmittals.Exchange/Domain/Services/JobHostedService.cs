@@ -59,6 +59,18 @@ namespace Mapna.Transmittals.Exchange.Services
                         this.logger.LogInformation(
                             $"{pendings.Length} Pening Outgoing Jobs Requeued.");
                     }
+                    using (var scope = serviceProvider.CreateScope())
+                    {
+                        var repo = scope.ServiceProvider.GetService<ITransmittalRepository>();
+
+                        var waitings = await repo.GetWaitingTransmittals();
+                        var outgoing = scope.ServiceProvider.GetService<IOutgoingQueue>();
+
+                        waitings.Select(x => outgoing.Enqueue(x.TransmittalNo))
+                            .ToArray();
+                        this.logger.LogInformation(
+                            $"{waitings.Length} Waiting Jobs Enqueued.");
+                    }
 
                 }
                 catch (Exception err)

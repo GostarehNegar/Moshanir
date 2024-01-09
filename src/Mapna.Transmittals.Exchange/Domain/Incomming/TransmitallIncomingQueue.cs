@@ -111,6 +111,10 @@ namespace Mapna.Transmittals.Exchange.Services.Queues.Incomming
                 {
                     //this.logger.LogInformation(
                     //    $"Failed to process job on Transmital{context.Transmittal} with {context.Trial} trials. We will retry in few seconds.");
+                    context.SendLog(LogLevel.Warning,
+                        $"Failed to process job on Transmital{context.Transmittal} with {context.Trial} trials. We will retry in few seconds\r\n. Last Error:'{task.Exception.GetBaseException().Message}'");
+                    //this.logger.LogWarning(
+                     //   $"Failed to process job on Transmital{context.Transmittal} with {context.Trial} trials. We will retry in few seconds\r\n. Last Error:'{task.Exception.GetBaseException().Message}'");
                     context.IncrementTrials();
                     this.Enqueue(context);
                     //Task.Delay(context.IncrementTrials(), context.CancellationToken)
@@ -126,7 +130,7 @@ namespace Mapna.Transmittals.Exchange.Services.Queues.Incomming
                 {
                     //context.SendLog(LogLevel.Error, "My Error");
                     context.SendLog(LogLevel.Error,
-                        $"FAILURE. Transmittal {context.Transmittal}" +
+                        $"FAILURE. Transmittal '{context.Transmittal}' " +
                         $"An unrecoverable error occured while trying to process this job:'{context.Job}'" +
                         $"\r\n Error:'{task.Exception.GetBaseException()?.Message}'");
                     context.CompletionSource.SetException(task.Exception);
@@ -205,7 +209,7 @@ namespace Mapna.Transmittals.Exchange.Services.Queues.Incomming
             }
             else if (task.IsFaulted)
             {
-                await context.GetRepository().SetJobStatus(context.Job.InternalId, "Failed");
+                await context.GetRepository().SetJobStatus(context.Job.InternalId, "Failed", task.Exception.GetBaseException().Message);
                 await SendResultFeedBack(context.Transmittal.TR_NO, "-1", task.Exception.GetBaseException().Message);
             }
             else
@@ -239,6 +243,7 @@ namespace Mapna.Transmittals.Exchange.Services.Queues.Incomming
                     .Then(IncommingQueueSteps.GetOrAddTransmittal)
                     .Then(IncommingQueueSteps.DownloadLetter)
                     .Then(IncommingQueueSteps.DownloadFiles)
+                    .Then(IncommingQueueSteps.RemoveDuplicateFiles)
                     .Then(IncommingQueueSteps.UpdateTransmittalIssueState)
                     .Run(context)
                     .ContinueWith(t => SetResult(t, context));

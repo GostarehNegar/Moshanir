@@ -63,7 +63,7 @@ namespace GN.Library.TaskScheduling
             return this.queues.OrderBy(x => x.Count).First().Enqueue(producer);
         }
 
-        public Task StartAsync(CancellationToken cancellationToken)
+        public virtual Task StartAsync(CancellationToken cancellationToken)
         {
             return Task.WhenAll(this.queues.Select(x => x.StartAsync(cancellationToken)));
         }

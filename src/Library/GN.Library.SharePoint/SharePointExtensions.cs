@@ -76,7 +76,7 @@ namespace GN.Library.SharePoint
             var result = new List<KeyValuePair<string, string>>();
             if (!string.IsNullOrWhiteSpace(connectionString))
             {
-                foreach (var item in connectionString.Split(';'))
+                foreach (var item in connectionString.Split(new char[] { ';', ',' }))
                 {
                     var keyValueArray = item.Split('=');
                     var key = keyValueArray[0];
@@ -164,9 +164,16 @@ namespace GN.Library.SharePoint
         {
             return Task<Microsoft.SharePoint.Client.File>.Run(() =>
             {
-                Microsoft.SharePoint.Client
-                   .File.SaveBinaryDirect(context, relativePath, stream, @override);
-                return context.Web.GetFileByServerRelativeUrl(relativePath);
+                try
+                {
+                    Microsoft.SharePoint.Client
+                       .File.SaveBinaryDirect(context, relativePath, stream, @override);
+                    return context.Web.GetFileByServerRelativeUrl(relativePath);
+                }
+                catch
+                {
+                    return null;
+                }
             });
 
         }

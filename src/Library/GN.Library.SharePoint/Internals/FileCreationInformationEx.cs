@@ -23,6 +23,11 @@ namespace GN.Library.SharePoint.Internals
             this.Content = mem.ToArray();
             return this;
         }
+        public FileCreationInformationEx WithContent(byte[] content)
+        {
+            this.Content = content;
+            return this;
+        }
         public async Task<FileCreationInformationEx> WithContentAsync(Stream content)
         {
             var mem = new MemoryStream();

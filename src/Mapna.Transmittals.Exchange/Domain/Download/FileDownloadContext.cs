@@ -26,7 +26,7 @@ namespace Mapna.Transmittals.Exchange.Internals
         public long BytesReceived { get; private set; }
         public long TotalBytesToReceive { get; private set; }
         public long ProgressPercentage => BytesReceived * 100 / (TotalBytesToReceive == 0 ? 1 : TotalBytesToReceive);
-        
+        public TransmittalFileSubmitModel FileSubmitModel;
         internal FileDownloadContext(string url, string destination)
         {
 
@@ -57,6 +57,11 @@ namespace Mapna.Transmittals.Exchange.Internals
         public FileDownloadContext WithStrategy(DownloadStrategy strategy)
         {
             this.Stratgey = strategy;
+            return this;
+        }
+        public FileDownloadContext WithFile(TransmittalFileSubmitModel file)
+        {
+            this.FileSubmitModel = file;
             return this;
         }
 

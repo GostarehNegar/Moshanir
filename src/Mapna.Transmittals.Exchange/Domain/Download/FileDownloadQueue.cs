@@ -50,7 +50,7 @@ namespace Mapna.Transmittals.Exchange.Internals
                 {
                     var span = result.IncrementTrials();
                     result.SendLog(LogLevel.Warning,
-                        $"Failed to Download File. '{result.Url}'. We will retry in '{span / 1000}' Seconds. \r\n Error:'{ctx.Exception.GetBaseException().Message}' ");
+                        $"Failed to Download File. '{result.FileSubmitModel?.FileName}', url: '{result.Url}'. We will retry in '{span / 1000}' Seconds. \r\n Error:'{ctx.Exception.GetBaseException().Message}' ");
                     Task.Delay(span, result.CancellationToken)
                         .ContinueWith(x =>
                         {
@@ -86,7 +86,9 @@ namespace Mapna.Transmittals.Exchange.Internals
             return
                     WithAsync<FileDownloadContext>.Setup()
                     .First(ctx => ctx.WithServiceProvide(ctx.ServiceProvider == null ? this.serviceProvider : ctx.ServiceProvider).WithToken(token))
+                    
                     .Then(DownloadSteps.DownloadFile)
+                    .Then(DownloadSteps.CheckFileMetadata)
                     .Run(result)
                     .ContinueWith(t => SetResult(t, result));
         }

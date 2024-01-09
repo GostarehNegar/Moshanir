@@ -111,6 +111,7 @@ namespace Mapna.Transmittals.Exchange.Controllers
                     {
                         await repo.SetJobStatus(model.TransmittalNumber, SPJobItem.Schema.Statuses.Failed, model.ResponseDesc);
                     }
+                    await repo.SetTransmittalIssueState(model.TransmittalNumber, SPTransmittalItem.Schema.IssueStates.Accept);
                 }
                 return Ok(new MapnaTransmittalFeedbackModel { 
                     TransmittalNumber = model.TransmittalNumber,

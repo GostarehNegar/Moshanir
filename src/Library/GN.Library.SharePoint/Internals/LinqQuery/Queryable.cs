@@ -63,7 +63,7 @@ namespace GN.Library.SharePoint.Internals.LinqQuery
             throw new NotImplementedException();
         }
 
-        public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default)
+        public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default(CancellationToken))
         {
             throw new NotImplementedException();
         }

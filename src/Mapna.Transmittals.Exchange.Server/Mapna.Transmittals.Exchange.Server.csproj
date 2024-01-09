@@ -24,4 +24,10 @@
     <ProjectReference Include="..\Mapna.Transmittals.Exchange\Mapna.Transmittals.Exchange.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Update="appsettings.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>

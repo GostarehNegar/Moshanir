@@ -28,7 +28,7 @@ namespace Mapna.Transmittals.Exchange.Internals
         Task<SPJobItem[]> GetPendingJobs();
 
         Task<int> CountTransmitalls();
-        Task<SPTransmittalItem> GetOrAddTransmittal(string referenceNumber, Action<SPTransmittalItem> configure);
+        Task<SPTransmittalItem> GetOrAddTransmittal(string referenceNumber, Action<SPTransmittalItem> configure, string action = null);
         Task<SPTransmittalItem> GetTransmittal(string transmittalNumber);
         Task<SPTransmittalItem> GetTransmittalById(int id);
         void SendLog(LogLevel level, string fmt, params object[] args);
@@ -51,7 +51,12 @@ namespace Mapna.Transmittals.Exchange.Internals
 
         Task<SPTransmittalItem[]> GetWaitingTransmittals();
 
+        Task<SPItem> GetCompany(string comcod);
+        Task<SPItem> GetDiscipline(string title);
 
+        string ToAbsoultePath(string serverRelativePath);
+        Task<SPDocLibItem> UpdateDocument(SPDocLibItem item);
+        Task DeleteDocument(SPDocLibItem item);
     }
 
 
@@ -287,15 +292,30 @@ namespace Mapna.Transmittals.Exchange.Internals
 
         }
 
-        public async Task<SPTransmittalItem> GetOrAddTransmittal(string referenceNumber, Action<SPTransmittalItem> configure)
+        public async Task<SPTransmittalItem> GetOrAddTransmittal(string referenceNumber, Action<SPTransmittalItem> configure, string action = null)
         {
             var list = await this.GetWeb().GetTransmitalsList();
             var item = await list.GetQueryable()
                 .Where(x => x.LetterNo == referenceNumber)
                 .FirstOrDefaultAsync();
+            ContentType ct = null;
+            if (!string.IsNullOrWhiteSpace(action))
+            {
+                ct = list.GetContentTypeByName(action);
+                if (ct == null)
+                {
+                    throw new Exception(
+                        $"Invalid Action. Action ':{action}' is invalid because there is no corresponding content type for this action. ");
+                }
+
+            }
             if (item != null)
             {
                 configure?.Invoke(item);
+                if (ct != null)
+                {
+                    item.SetAttributeValue("ContentTypeId", ct.Id);
+                }
                 return await list.UpdateItem(item);
             }
             else
@@ -304,7 +324,13 @@ namespace Mapna.Transmittals.Exchange.Internals
                 {
                     LetterNo = referenceNumber
                 };
+                if (ct != null)
+                {
+                    item.SetAttributeValue("ContentTypeId", ct.Id);
+                }
                 configure?.Invoke(item);
+                // 
+                //
                 try
                 {
                     return await list.InsertItem(item);
@@ -318,7 +344,7 @@ namespace Mapna.Transmittals.Exchange.Internals
                            .FirstOrDefaultAsync();
                     }
                 }
-                if (item.Id == 0)
+                if (item == null || item.Id == 0)
                 {
                     throw new TransmitalException("Failed to Insert Transmittal.");
                 }
@@ -346,6 +372,9 @@ namespace Mapna.Transmittals.Exchange.Internals
         public async Task Test(string path)
         {
             var docs = await this.GetWeb().GetDocLib();
+            var lst = await this.GetWeb().GetTransmitalsList();
+            var ttt = lst.GetContentTypes();
+            return;
             var trans = await this.GetTransmittal("MD2-MOS-11");
             var atts = await SPListExtensions.GetAttachments(trans);
             var list = await this.GetWeb().GetTransmitalsList();
@@ -387,7 +416,7 @@ namespace Mapna.Transmittals.Exchange.Internals
                 var path = await list.With(x => x.RootFolder, x => x.RootFolder.ServerRelativeUrl)
                     .DoAsync(x => x.RootFolder.ServerRelativeUrl);
                 var res = await this.GetContext()
-                    .SaveBinaryDirectAsync($"{path}{relativePath}/{Path.GetFileName(name)}", stream, true);
+                    .SaveBinaryDirectAsync($"{path}{relativePath}{Path.GetFileName(name)}", stream, true);
                 if (configure != null)
                 {
                     await res.With(x => x.ListItemAllFields).DoAsync(async x =>
@@ -400,6 +429,7 @@ namespace Mapna.Transmittals.Exchange.Internals
                         x.ListItemAllFields.Update();
                         await list.Context.ExecuteQueryAsync();
                     });
+                   // return $"{path}{relativePath}/{Path.GetFileName(name)}";
                 }
                 return await res.With(f => f.ServerRelativeUrl).DoAsync(x => x.ServerRelativeUrl);
             }
@@ -447,9 +477,16 @@ namespace Mapna.Transmittals.Exchange.Internals
             await doc.With(x => x.ListItemAllFields)
                 .DoAsync(x =>
                 {
-                    var f = x.ListItemAllFields;
-                    id = (int)x.ListItemAllFields["ID"];
+                    try
+                    {
+                        var f = x.ListItemAllFields;
+
+                        id = (int)x.ListItemAllFields["ID"];
+                    }
+                    catch { }
                 });
+            if (!id.HasValue)
+                return null;
             var item = await (await this.GetWeb().GetDocLib())
                 .GetItemById<SPDocLibItem>(id.Value);
 
@@ -492,6 +529,57 @@ namespace Mapna.Transmittals.Exchange.Internals
                 .Where(x => x.ToSI == "MD2")
                 .ToArray();
 
+        }
+
+        public async Task<SPItem> GetCompany(string comcod)
+        {
+            var lst = await this.GetWeb().GetListByPath("company");
+            var companies = await lst.GetQueryable<SPItem>().ToArrayAsync();
+            var res = companies.FirstOrDefault(x => x.GetAttibuteValue<string>("ComCod") == comcod);
+            return res;
+
+
+        }
+
+        public async Task<SPItem> GetDiscipline(string title)
+        {
+            var lst = await this.GetWeb().GetListByPath("Discipline");
+            return await lst.GetQueryable<SPItem>()
+                .Where(x => x.Title == title)
+                .FirstOrDefaultAsync();
+
+        }
+
+        public string ToAbsoultePath(string serverRelativePath)
+        {
+            try
+            {
+                return Uri.TryCreate(this.GetContext().Url, UriKind.Absolute, out var uri)
+                    ? uri.GetLeftPart(UriPartial.Authority) + serverRelativePath
+                    : "";
+            }
+            catch
+            {
+
+            }
+            return "";
+
+
+        }
+
+        public async Task<SPDocLibItem> UpdateDocument(SPDocLibItem item)
+        {
+            return await(await this.GetWeb()
+                .GetDocLib())
+                .UpdateItem(item);
+            
+        }
+
+        public async Task DeleteDocument(SPDocLibItem item)
+        {
+            await(await this.GetWeb()
+               .GetDocLib())
+               .DeleteItem(item);
         }
     }
 

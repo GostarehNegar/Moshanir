@@ -20,7 +20,9 @@ namespace Mapna.Transmittals.Exchange.Services.Queues.Incomming.Steps
             cfg
                 .WithMaxTrials(3)
                 .WithStrategy(DownloadStrategy.DownloadToSharepoint)
-                .WithJob(context.Job).WithTransmittal(context.TransmittalItem).WithServiceProvide(context.ServiceProvider, false));
+                .WithJob(context.Job).WithTransmittal(context.TransmittalItem)
+                .WithServiceProvide(context.ServiceProvider, false))
+                .WithFile(file);
 
             result.CompletionTask.ContinueWith(t =>
             {
@@ -48,8 +50,26 @@ namespace Mapna.Transmittals.Exchange.Services.Queues.Incomming.Steps
             await Task.WhenAll(tasks);
             return context;
         }
-        public static async Task<IncommingTransmitalContext> CheckFilesMetadata(IncommingTransmitalContext context)
+        
+        public static async Task<IncommingTransmitalContext> RemoveDuplicateFiles(IncommingTransmitalContext context)
         {
+            var docs = (await context.GetRepository().GetDocumentsByTransmittal(context.TransmittalItem.TransmittalNo))
+                .Where(x => x.FileSystemObjectType == Microsoft.SharePoint.Client.FileSystemObjectType.File)
+                .ToArray();
+                
+            var trans_docs = context.Transmittal.Documents;
+            var dupliactes = docs.Where(x =>!trans_docs.Any(d=>string.Compare(x.FileLeafRef,d.FileName,true)==0) ).ToArray();
+            foreach (var doc in dupliactes)
+            {
+                //doc.FileSystemObjectType== Microsoft.SharePoint.Client.FileSystemObjectType.File
+                await context.GetRepository().DeleteDocument(doc);
+                context.SendLog(Microsoft.Extensions.Logging.LogLevel.Information,
+                    $"File :{doc.FileLeafRef} deleted. Because it is detecte as a duplicate file!");
+
+            }
+
+            
+
             return context;
         }
         public static async Task<IncommingTransmitalContext> CancelDownloads(IncommingTransmitalContext context)

@@ -76,7 +76,7 @@ namespace GN.Library.Shared.Entities
         public T GetAttributeValue<T>(string key)
         {
             this.Attributes = this.Attributes ?? new DynamicAttributeCollection();
-            return Attributes.TryGetValue<T>(key, out var _t) ? _t : default;
+            return Attributes.TryGetValue<T>(key, out var _t) ? _t : default (T);
         }
         public string GetAttributeValue(string key)
         {
@@ -92,7 +92,7 @@ namespace GN.Library.Shared.Entities
         {
             if (this.Id == null)
             {
-                return default;
+                return default(T);
             }
             if (typeof(T) == typeof(string))
             {

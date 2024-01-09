@@ -116,7 +116,7 @@ namespace GN.Library.Shared.Entities
                     return true;
                 }
             }
-            result = default;
+            result = default(T);
             return false;
         }
 

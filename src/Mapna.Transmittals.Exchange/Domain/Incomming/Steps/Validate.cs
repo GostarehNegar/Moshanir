@@ -16,7 +16,7 @@ namespace Mapna.Transmittals.Exchange.Services.Queues.Incomming.Steps
                 throw new TransmitalException(
                     $"Trial {ctx.Trial} exceeds maximum {ctx.MaxTrials}. For Transmitall{ctx.Transmittal} ", false);
             }
-            var _wait = ctx.Trial * ctx.Trial * 6 * 1000;
+            var _wait = ctx.Trial * ctx.Trial * 36 * 1000;
             ctx.GetLogger().LogInformation(
                 $"This is trials {ctx.Trial} of {ctx.MaxTrials}. We will wait {_wait} seconds.");
             await Task.Delay(ctx.Trial * ctx.Trial * 6 * 1000, ctx.CancellationToken);

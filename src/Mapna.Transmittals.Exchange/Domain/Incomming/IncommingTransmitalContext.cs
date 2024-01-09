@@ -7,7 +7,7 @@ namespace Mapna.Transmittals.Exchange.Services.Queues
     {
         public IncommingTransmitalContext()
         {
-            MaxTrials = 3;
+            MaxTrials = 5;
         }
         public override string Title => $"Receiving {base.Title}";
         public string GetDestinationFileName(TransmittalFileSubmitModel file)

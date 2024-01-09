@@ -24,7 +24,7 @@ using GN.Library.SharePoint.Internals;
 using Microsoft.Extensions.Configuration;
 using Mapna.Transmittals.Exchange.Domain.Outgoing;
 using Mapna.Transmittals.Exchange.Models;
-using Mapna.Transmittals.Exchange.Infrastructure.SharePoint;
+using Microsoft.SharePoint.Client;
 
 namespace Mapna.Transmittals.Exchange.Tests
 {
@@ -42,7 +42,7 @@ namespace Mapna.Transmittals.Exchange.Tests
                    s.AddSharePointServices(c.Configuration, cfg => { });
                    s.AddTransmittalsExchange(c.Configuration, cfg =>
                    {
-                      // cfg.ConnectionString = "Url=http://dcc.moshanir.co:90/ardakan;UserName=tem_dc;Password=D@c2023;Domain=moshanir";
+                      // cfg.ConnectionString = "Url=http://dcc.moshanir.co:90/nogonbad;UserName=tem_dc;Password=D@c2023;Domain=moshanir";
                    });
                })
                .Build()
@@ -284,6 +284,7 @@ namespace Mapna.Transmittals.Exchange.Tests
         [TestMethod]
         public async Task DocLib_works()
         {
+            var ssss = Path.GetTempPath();
             var cccc = "/llkklk/test.jpg";
 
             var host = this.GetHost();
@@ -345,29 +346,23 @@ namespace Mapna.Transmittals.Exchange.Tests
 
         }
         [TestMethod]
-        public async Task EnsureListsTest()
-        {
-            var host = this.GetHost();
-            var options = host.Services.GetServiceEx<TransmittalsExchangeOptions>();
-            var context = host.Services.GetServiceEx<IClientContextFactory>()
-                .CreateContext(options.ConnectionString);
-            await TransmittalsWebHelper.EnsureLists(context, host.Services);
-
-        }
-        [TestMethod]
         public async Task SendTransmittal()
         {
+            var fs = string.Format("{0:0000}", 111);
+
             var host = this.GetHost();
             var repo = host.Services.GetService<ITransmittalRepository>();
 
-            var b = await repo.GetWaitingTransmittals();
+            var f11 = await repo.GetDiscipline("General");
 
-            return;
-            var docs = await repo.GetDocumentsByTransmittal("MD2-MOS-46");
+            //var b = await repo.GetWaitingTransmittals();
+
+            //return;
+            //var docs = await repo.GetDocumentsByTransmittal("MD2-MOS-59");
             //var trans1 = await repo.GetTransmittal("MD2-MOS-59");
             //trans1.SendFormal = "Yes";
             //trans1.IssueState = SPTransmittalItem.Schema.IssueStates.Accept.ToString();
-            await repo.SetTransmittalIssueState("MD2-MOS-59", SPTransmittalItem.Schema.IssueStates.Preparing);
+            await repo.SetTransmittalIssueState("MD2-MOS-59", SPTransmittalItem.Schema.IssueStates.Accept);
             
 
 
@@ -391,6 +386,40 @@ namespace Mapna.Transmittals.Exchange.Tests
 
         }
 
+        [TestMethod]
+        public async Task Test12()
+        {
+            var host = this.GetHost();
+            var repo = host.Services.GetService<ITransmittalRepository>();
+            var trans = await repo.GetTransmittal("MOS-MD2-420");
+            var docs = await repo.GetDocumentsByTransmittal("MOS-MD2-420");
+            var files = docs
+               .Where(x => x.FileSystemObjectType == Microsoft.SharePoint.Client.FileSystemObjectType.File)
+               .Select(x => new TransmittalOutgoingFileModel
+               {
+                   ServerRelativePath = x.GetAttibuteValue<string>("FileRef"),
+                   DocumentNumber = x.DocumentNumber,
+                   Purpose = x.Purpose,
+                   Status = x.Status,
+                   ExtRev = x.ExtRev,
+                   IntRev = x.IntRev,
+                   DocLink = x.GetAttibuteValue<FieldUrlValue>("DocLink")?.Url
+               }).ToArray();
+
+            var letter = trans.GetAttachments().FirstOrDefault();
+            var ggg = repo.ToAbsoultePath(letter.ServerRelativeUrl);
+
+            var fffff = files.Select(x => x.GetServerRelativePath()).ToArray();
+
+        }
+
+        [TestMethod]
+        public async Task ContentType_Tests()
+        {
+            var host = this.GetHost();
+            var repo = host.Services.GetService<ITransmittalRepository>();
+            await repo.Test("");
+        }
 
 
 

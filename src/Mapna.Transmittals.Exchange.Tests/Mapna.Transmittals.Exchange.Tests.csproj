@@ -35,4 +35,10 @@
     <ProjectReference Include="..\Mapna.Transmittals.Exchange\Mapna.Transmittals.Exchange.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="pdf1.zip">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

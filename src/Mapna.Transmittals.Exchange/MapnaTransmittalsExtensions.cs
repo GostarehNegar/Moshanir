@@ -8,6 +8,7 @@ using Microsoft.Extensions.Hosting;
 using Mapna.Transmittals.Exchange.Services.Queues.Incomming;
 using Mapna.Transmittals.Exchange.Domain.Outgoing;
 using System.Text;
+using Mapna.Transmittals.Exchange.GhodsNiroo;
 
 [assembly: InternalsVisibleTo("Mapna.Transmittals.Exchange.Tests")]
 namespace Mapna.Transmittals.Exchange
@@ -31,8 +32,8 @@ namespace Mapna.Transmittals.Exchange
             services.AddSingleton<FileDownloadQueue>();
             services.AddSingleton<IFileDownloadQueue>(sp => sp.GetService<FileDownloadQueue>());
             services.AddSingleton<IHostedService>(sp => sp.GetService<FileDownloadQueue>());
-            
-            
+
+
             services.AddSingleton<TransmitallIncomingQueue>();
             services.AddSingleton<IIncommingQueue>(sp => sp.GetService<TransmitallIncomingQueue>());
             services.AddSingleton<IHostedService>(sp => sp.GetService<TransmitallIncomingQueue>());
@@ -48,6 +49,22 @@ namespace Mapna.Transmittals.Exchange
             return services;
 
         }
+        
+        
+        public static IServiceCollection AddGhodsNiroo(this IServiceCollection services, IConfiguration configuration, Action<GhodsNirooTransmittalOptions> configure)
+        {
+            var options = new GhodsNirooTransmittalOptions().Validate();
+            configure?.Invoke(options);
+            services.AddSingleton(options.Validate());
+            services.AddSingleton<GhodsNirooIncomingQueue>();
+            services.AddHostedService(x => x.GetService<GhodsNirooIncomingQueue>());
+            services.AddSingleton<IGhodsNirooIncomingQueue>(sp=>sp.GetService<GhodsNirooIncomingQueue>());
+
+
+
+            return services;
+        }
+        
         public static bool IsRetryable(this Exception exception)
         {
             if (exception is TransmitalException exp)
@@ -96,13 +113,13 @@ namespace Mapna.Transmittals.Exchange
                 return false;
             }
         }
-        
+
 
         internal static string ToUrl(string path)
         {
             if (string.IsNullOrWhiteSpace(path))
                 return string.Empty;
-            return $"http://77.104.99.86:9000/Transmittals/File/{System.Convert.ToBase64String(Encoding.UTF8.GetBytes(path))}";
+            return $"http://172.27.18.35:2450/Transmittals/File/{System.Convert.ToBase64String(Encoding.UTF8.GetBytes(path))}";
         }
 
         internal static string GetDownloadableUrl(this Microsoft.SharePoint.Client.File file)
@@ -111,6 +128,19 @@ namespace Mapna.Transmittals.Exchange
                 return null;
             return ToUrl(file?.ServerRelativeUrl);
             //return $"http://172.16.6.78:2450/Transmittal/File/{System.Convert.ToBase64String(Encoding.UTF8.GetBytes(file.ServerRelativeUrl))}";
+        }
+        internal static string ToMapnaTrandmittalNumber(string no)
+        {
+            if (no == null)
+            {
+                return "";
+            }
+            var parts = no.Split('-');
+            if (parts.Length > 2 && int.TryParse(parts[2], out var ival))
+            {
+                return $"AS-MD2-MOS-T-{string.Format("{0:0000}", ival)}";
+            }
+            return "";
         }
     }
 }

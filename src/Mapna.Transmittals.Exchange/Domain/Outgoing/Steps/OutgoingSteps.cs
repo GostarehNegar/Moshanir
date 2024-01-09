@@ -20,12 +20,30 @@ namespace Mapna.Transmittals.Exchange.Domain.Outgoing.Steps
         public static async Task Load(TransmittalOutgiongContext ctx, IWithPipe pipe, Func<TransmittalOutgiongContext, Task> n)
         {
             ctx.CancellationToken.ThrowIfCancellationRequested();
-
+            var referTo = "";
             ctx.SPTransmittalItem = await ctx.GetRepository().GetTransmittal(ctx.TransimttalNumber);
             if (ctx.SPTransmittalItem == null)
             {
                 throw new PipeUnrecoverableException($"Transmittal Not Found: {ctx.TransimttalNumber}");
             }
+
+            var referToField = ctx.SPTransmittalItem.FieldValuesEx["PurseToLook"];
+            if (referToField != null)
+            {
+                var referToTransNumber = (referToField as FieldLookupValue).LookupValue;
+                var trans = await ctx.GetRepository().GetTransmittal(referToTransNumber);
+                if (trans != null)
+                {
+                    referTo = trans.LetterNo;
+                    if (string.IsNullOrWhiteSpace(referTo))
+                    {
+                        referTo = MapnaTransmittalsExtensions.ToMapnaTrandmittalNumber(referToTransNumber);
+                    }
+                }
+
+            }
+
+
             var letterFile = ctx.SPTransmittalItem.GetAttachments().FirstOrDefault();
 
             ctx.Transmittal = new TransmittalOutgoingModel
@@ -33,7 +51,8 @@ namespace Mapna.Transmittals.Exchange.Domain.Outgoing.Steps
                 TransmitallNumber = ctx.SPTransmittalItem.TransmittalNo,
                 TransmittalTitle = ctx.SPTransmittalItem.TransmittalTitle,
                 Url = ctx.SPTransmittalItem.GetAttachments().FirstOrDefault()?.GetDownloadableUrl(),
-                LetterFileName = letterFile?.Name
+                LetterFileName = letterFile?.Name,
+                ReferedTo = referTo
             };
             var files = await ctx.GetRepository().GetDocumentsByTransmittal(ctx.TransimttalNumber);
             //var fff = files[1].GetAttibuteValue<FieldLookupValue>("DocNoLook");
@@ -44,10 +63,11 @@ namespace Mapna.Transmittals.Exchange.Domain.Outgoing.Steps
                 {
                     ServerRelativePath = x.GetAttibuteValue<string>("FileRef"),
                     DocumentNumber = x.DocumentNumber,
-                    Purpose = "FC",// x.Purpose,
-                    Staus = "Approved",// "C1",// x.Status,
+                    Purpose = x.Purpose,
+                    Status = x.Status,
                     ExtRev = x.ExtRev,
-                    IntRev = x.IntRev
+                    IntRev = x.IntRev,
+                    DocLink = x.GetAttibuteValue<FieldUrlValue>("DocLink")?.Url
                 }).ToArray();
 
             ctx.GetLogger().LogInformation(
@@ -63,9 +83,9 @@ namespace Mapna.Transmittals.Exchange.Domain.Outgoing.Steps
             {
                 job = await ctx.GetRepository().CreateJob(new SPJobItem
                 {
-                    Content = MapnaTransmittalsExtensions.Serialize(ctx.Transmittal),
+                    Content = MapnaTransmittalsExtensions.Serialize(ctx.Transmittal.ToSubmitModel()),
                     InternalId = ctx.Transmittal.TransmitallNumber,
-                    //SourceId = context.Transmittal.GetInternalId(),
+                    SourceId = ctx.Transmittal.TransmitallNumber,
                     Title = ctx.Transmittal.TransmittalTitle,
                     Direction = "Out",
                 });

@@ -46,6 +46,10 @@ namespace GN.Library.SharePoint
                 {
                     dest[val.Key] = val.Value;
                 }
+                if (val.Key == "ContentTypeId")
+                {
+                    dest[val.Key] = val.Value;
+                }
             }
         }
 

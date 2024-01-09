@@ -46,24 +46,34 @@ namespace Mapna.Transmittals.Exchange.Models
         public string Tr_No { get; set; }
         public string Domain { get; set; }
         public string Action { get; set; }
+        public string LetterFileName { get; set; }
         public DocumentModel[] Documents { get; set; }
 
     }
 
     public class TransmittalOutgoingFileModel
     {
-        public string ServerRelativePath { get; set; }
+        public string ServerRelativePath;
         public string DocumentNumber { get; set; }
         public string Purpose { get; set; }
-        public string Staus { get; set; }
+        public string Status { get; set; }
         public string ExtRev { get; set; }
         public string IntRev { get; set; }
+        public string DocLink;
 
+        public string GetServerRelativePath()
+        {
+            if (Uri.TryCreate(this.DocLink,UriKind.Absolute,out var uri))
+            {
+                return uri.AbsolutePath;
+            }
+            return this.ServerRelativePath;
+        }
         public string Url
         {
             get
             {
-                return MapnaTransmittalsExtensions.ToUrl(this.ServerRelativePath);
+                return MapnaTransmittalsExtensions.ToUrl(this.GetServerRelativePath());
             }
         }
         public string FileName
@@ -72,7 +82,7 @@ namespace Mapna.Transmittals.Exchange.Models
             {
                 try
                 {
-                    return Path.GetFileName(this.ServerRelativePath);
+                    return Path.GetFileName(this.GetServerRelativePath());
                 }
                 catch
                 {
@@ -88,7 +98,7 @@ namespace Mapna.Transmittals.Exchange.Models
             {
                 DocNumber = this.DocumentNumber,
                 Purpose = this.Purpose ?? "X",
-                Status = this.Staus,
+                Status = this.Status,
                 Ext_Rev = this.ExtRev,
                 Int_Rev = this.IntRev,
                 FileName = this.FileName,
@@ -103,6 +113,8 @@ namespace Mapna.Transmittals.Exchange.Models
         public string TransmitallNumber { get; set; }
         public string TransmittalTitle { get; set; }
         public TransmittalOutgoingFileModel[] Files { get; set; }
+
+        public string ReferedTo { get; set; }
 
         public string Url { get; set; }
         public string LetterFileName { get; set; }
@@ -126,7 +138,7 @@ namespace Mapna.Transmittals.Exchange.Models
                 doc.SetAttribute("url", file.Url);
                 doc.SetAttribute("doc_no", file.DocumentNumber);
                 doc.SetAttribute("client_file_name", file.FileName);
-                doc.SetAttribute("status", file.Staus);
+                doc.SetAttribute("status", file.Status);
                 doc.SetAttribute("purpose", file.Purpose);
                 doc.SetAttribute("ext_rev", file.ExtRev);
 
@@ -146,8 +158,9 @@ namespace Mapna.Transmittals.Exchange.Models
                 Tr_No = this.TransmitallNumber,
                 Action = "0",
                 Domain = "Moshanir",
-                ReferedTo = "AS-MD2-FAB-T-0002",
-                Source_Id = "My Source Id"
+                ReferedTo = ReferedTo,
+                Source_Id = "My Source Id",
+                LetterFileName = this.LetterFileName,
             };
             result.Documents = this.Files.Select(x => x.ToDocumentModel()).ToArray();
             return result;

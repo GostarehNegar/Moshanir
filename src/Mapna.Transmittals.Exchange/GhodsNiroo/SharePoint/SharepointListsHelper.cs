@@ -1,14 +1,14 @@
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Microsoft.SharePoint.Client;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
 using GN.Library.SharePoint;
 using System.Linq;
+using Microsoft.Extensions.DependencyInjection;
 
-namespace Mapna.Transmittals.Exchange.Infrastructure.SharePoint
+namespace Mapna.Transmittals.Exchange.GhodsNiroo.SharePoint
 {
     public class TransmittalsWebHelper
     {
@@ -67,7 +67,7 @@ namespace Mapna.Transmittals.Exchange.Infrastructure.SharePoint
             var result = false;
             try
             {
-                var log_title = "Job1";
+                var log_title = "Jobs";
                 var lst = await EnsureList(log_title, "Transmittal Exchange Jobs");
                 if (lst == null)
                 {
@@ -101,7 +101,7 @@ namespace Mapna.Transmittals.Exchange.Infrastructure.SharePoint
             }
             catch (Exception err)
             {
-                this.logger.LogError(
+                logger.LogError(
                     $"An error occured while trying to EnsureLogList. Err:{err.Message}");
             }
             return result;
@@ -111,7 +111,7 @@ namespace Mapna.Transmittals.Exchange.Infrastructure.SharePoint
             var result = false;
             try
             {
-                var log_title = "Log1";
+                var log_title = "Log";
                 var lst = await EnsureList(log_title, "Transmittal Exchange Logs");
                 if (lst == null)
                 {
@@ -123,7 +123,7 @@ namespace Mapna.Transmittals.Exchange.Infrastructure.SharePoint
                     new Tuple<string, string>("Message",
                         "<Field Type='Note' DisplayName='Message' Required='FALSE'  NumLines='6' RichText='FALSE' RichTextMode='Compatible'  Sortable='FALSE'  StaticName='Message' Name='Message' AppendOnly='FALSE' Version='1' />"),
                     //new Tuple<string, string>("Test",
-                    //    "<Field Type='Text'  DisplayName='Test' Required='FALSE' />")
+                    //    "<Field Type='Text'  DisplayName='Scope' Required='FALSE' />")
 
 
                 };
@@ -135,11 +135,12 @@ namespace Mapna.Transmittals.Exchange.Infrastructure.SharePoint
                             $"Failed to ensure field '{field.Item1}' on list '{log_title}'");
                     }
                 }
+                result = true;
 
             }
             catch (Exception err)
             {
-                this.logger.LogError(
+                logger.LogError(
                     $"An error occured while trying to EnsureLogList. Err:{err.Message}");
             }
             return result;
@@ -153,4 +154,3 @@ namespace Mapna.Transmittals.Exchange.Infrastructure.SharePoint
         }
     }
 }
-

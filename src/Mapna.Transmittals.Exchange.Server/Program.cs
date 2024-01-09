@@ -31,12 +31,8 @@ namespace Mapna.Transmittals.Exchange.Server
                 //                    GN.Library.CommandLines.Internals.ConsoleApplicationHelper.Main(args)
                 //                        .ConfigureAwait(false).GetAwaiter().GetResult();
 
-#if (NET461_OR_GREATER)
                 NetCore = false;
                 CreateWindowsService(args).Run();
-#else
-                CreateHostBuilder(args).Build().UseGNLib().Run();
-#endif
 
             }
             catch (Exception err)
@@ -50,7 +46,7 @@ namespace Mapna.Transmittals.Exchange.Server
             }
         }
 
-#if (NET461_OR_GREATER)
+
 
         public static IWebHostBuilder CreateHostBuilder(string[] args)
         {
@@ -84,40 +80,40 @@ namespace Mapna.Transmittals.Exchange.Server
         {
             return WindowsServiceHost.CreateDefaultBuilder(args)
                 .UseWebHostBuilder(CreateHostBuilder(args))
-                .ConfigureWindowsService("Mehregan.SMS.Server", "Mehregan SMS Server", null)
+                .ConfigureWindowsService("Mapna.Transmittal.Server", "Mapna Transmittal Server", null)
                 .Build();
         }
 
 
-#endif
-#if (NETCOREAPP3_0_OR_GREATER)
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
-            .UseDefaultServiceProvider(s => s.ValidateScopes = false)
-                .ConfigureAppConfiguration(c => ConfigureAppConfiguration(c, args))
-                .ConfigureLogging(logging => ConfigureLogging(logging))
-                .ConfigureWebHostDefaults(cfg =>
-                {
-                    cfg.UseUrlsEx();
-                    cfg.UseNLog();
-                    cfg.Configure(app =>
-                    {
-                        ConfigureApp(app);
-                        app.UseRouting();
-                        app.UseEndpoints(endpoints =>
-                        {
-                            endpoints.MapControllers();
-                        });
-                        app.UseSignalREventHub();
-                    });
-                })
-                .ConfigureServices((c, s) =>
-                {
-                    NetCore = true;
-                    ConfigureServices(c.Configuration, s, args);
-                    s.AddControllers();
-                });
-#endif
+
+//#if (NETCOREAPP3_0_OR_GREATER)
+//        public static IHostBuilder CreateHostBuilder(string[] args) =>
+//            Host.CreateDefaultBuilder(args)
+//            .UseDefaultServiceProvider(s => s.ValidateScopes = false)
+//                .ConfigureAppConfiguration(c => ConfigureAppConfiguration(c, args))
+//                .ConfigureLogging(logging => ConfigureLogging(logging))
+//                .ConfigureWebHostDefaults(cfg =>
+//                {
+//                    cfg.UseUrlsEx();
+//                    cfg.UseNLog();
+//                    cfg.Configure(app =>
+//                    {
+//                        ConfigureApp(app);
+//                        app.UseRouting();
+//                        app.UseEndpoints(endpoints =>
+//                        {
+//                            endpoints.MapControllers();
+//                        });
+//                        app.UseSignalREventHub();
+//                    });
+//                })
+//                .ConfigureServices((c, s) =>
+//                {
+//                    NetCore = true;
+//                    ConfigureServices(c.Configuration, s, args);
+//                    s.AddControllers();
+//                });
+//#endif
 
         public static void ConfigureServices(IConfiguration configuration, IServiceCollection s, string[] args)
         {

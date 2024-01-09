@@ -26,11 +26,15 @@ namespace Mapna.Transmittals.Exchange
                     throw new ValidationException($"Invalid Transmittal: {this}. {message()}", false);
             }
 
+            if (this.Title!=null && this.Title.Length >= 100)
+            {
+                this.Title = this.Title.Substring(0,99);
+            }
             //assert(!string.IsNullOrWhiteSpace(Source_Id), () => $"'{Source_Id}' is not a valid '{nameof(Transmittal.Source_Id)}' or is null.");
             assert(!string.IsNullOrWhiteSpace(TR_NO), () => $"'{TR_NO}' is not a valid '{nameof(TransmittalSubmitModel.TR_NO)}' or is null.");
             assert(Uri.IsWellFormedUriString(Url, UriKind.Absolute), () => $"'{Url}' is not a valid Url.");
-            var validActions = "Issue;FirstIssue;Reply;Forward";
-            this.TR_ACTION = string.IsNullOrWhiteSpace(this.TR_ACTION) ? "FirstIssue" : this.TR_ACTION;
+            var validActions = "FirstIssue;ReplyIssue;Forward;RenewIssue";
+            //this.TR_ACTION = string.IsNullOrWhiteSpace(this.TR_ACTION) ? "FirstIssue" : this.TR_ACTION;
             assert(validActions.Contains(this.TR_ACTION), () => $"'{TR_ACTION}' is not a valid actionn. Valid actions are:'{validActions}'");
 
             assert(Documents != null && Documents.Length > 0, () => $"'{Documents?.Length}'. Transmittals should contain at least one file.");
