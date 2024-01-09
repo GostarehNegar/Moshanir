@@ -131,5 +131,14 @@ namespace Mapna.Transmittals.Exchange.GhodsNiroo.SharePoint
             var item_read = await list.GetItemById<SPDocLibItem>(item_inserted.Id);
             return item_read;
         }
+        public async Task<SPJobItem[]> GetPendingJobs()
+        {
+            var list = await this.GetJobs();
+            var i = await list.GetQueryable()
+                .Where(x => x.Status == SPJobItem.Schema.Statuses.InProgress)
+                .ToArrayAsync();
+            return i;
+
+        }
     }
 }

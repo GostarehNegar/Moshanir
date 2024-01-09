@@ -1,0 +1,31 @@
+
+@baseUrl = http://172.16.6.78:2451/GhodsNiroo
+@baseUrl = http://77.104.99.86:9000/GhodsNiroo
+
+##
+GET {{baseUrl}}}/ping
+
+###
+
+POST {{baseUrl}}/
+Content-Type: application/json
+
+{
+    "Url": "https://raw.githubusercontent.com/GostarehNegar/Moshanir/main/File1.pdf",
+    "ReferedTo": null,
+    "TR_NO": "MAPNA-TRANS-41",
+    "TR_ACTION": "FirstIssue",
+    "Title":"Sample Title",
+    "Documents": [
+        {
+            "DocNumber": "MD2-AS-00-BP-I-10-PI0-101",
+            "FileName": "MD2-AS-00-BP-I-10-PI0-101_A_A.pdf",
+            "Url": "https://raw.githubusercontent.com/GostarehNegar/Moshanir/main/File2.pdf",
+            "Ext_Rev": "A",
+            "Int_Rev": "A",
+            "Status": "STAT",
+            "Purpose": "PURP",
+        }
+    ]
+}
+

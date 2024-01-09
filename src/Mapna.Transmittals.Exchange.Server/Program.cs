@@ -127,6 +127,7 @@ namespace Mapna.Transmittals.Exchange.Server
             s.AddMessagingServices(configuration, cfg => { cfg.Name = AppInfo.Current.Name; });
             s.AddSharePointServices(configuration, cfg => { });
             s.AddTransmittalsExchange(configuration, cfg => { });
+            s.AddGhodsNiroo(configuration, opt => { });
             s.AddSwaggerGen(opt => {
                 opt.SwaggerDoc("v1", new OpenApiInfo { Title = "Exchange API", Version = "v1" });
             });

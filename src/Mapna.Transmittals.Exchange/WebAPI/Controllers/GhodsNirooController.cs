@@ -40,7 +40,7 @@ namespace Mapna.Transmittals.Exchange.WebAPI.Controllers
                 this.logger.LogInformation(
                     $"GhodsNiroo Controller Received a Transmittal. We will try to enqueue it. {transmittal}");
                 queue.Enqueue(transmittal.Validate());
-                return Ok(new SubmitReply { Failed = 0, Error = err.GetBaseException().Message, TransmittalId = transmittal.TR_NO });
+                return Ok(new SubmitReply { Failed = 0, TransmittalId = transmittal.TR_NO });
             }
             catch (Exception err)
             {

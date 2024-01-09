@@ -59,6 +59,7 @@ namespace Mapna.Transmittals.Exchange
             services.AddSingleton<GhodsNirooIncomingQueue>();
             services.AddHostedService(x => x.GetService<GhodsNirooIncomingQueue>());
             services.AddSingleton<IGhodsNirooIncomingQueue>(sp=>sp.GetService<GhodsNirooIncomingQueue>());
+            services.AddHostedService<GhodsNirooTransmittalBackgroundService>();
 
 
 
